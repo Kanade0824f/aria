@@ -1,0 +1,16 @@
+{
+  "name": "aria.",
+  "short_name": "aria.",
+  "description": "A minimalist, elegant note-taking app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF9",
+  "theme_color": "#7C9885",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

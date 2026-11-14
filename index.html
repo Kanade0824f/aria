@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>aria.</title>
+  <meta name="description" content="A minimalist, elegant note-taking app with Markdown, LaTeX, and multilingual support.">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FAFAF9">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&family=Noto+Serif+JP:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&family=Source+Serif+4:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+
+  <!-- KaTeX for LaTeX rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Marked for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js"></script>
+
+  <!-- Highlight.js for code blocks -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/github.min.css" id="hljs-light">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/github-dark.min.css" id="hljs-dark" disabled>
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Splash screen -->
+  <div id="splash" class="splash">
+    <div class="splash-logo">aria<span class="splash-dot">.</span></div>
+  </div>
+
+  <!-- Main App Container -->
+  <div id="app" class="app">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo" role="button" tabindex="0" aria-label="aria. home">
+          <span class="logo-text">aria</span><span class="logo-dot">.</span>
+        </div>
+        <button id="btn-sidebar-collapse" class="btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="11 17 6 12 11 7"></polyline>
+            <polyline points="18 17 13 12 18 7"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Search -->
+      <div class="sidebar-search">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="search-input" class="search-input" data-i18n-placeholder="search" placeholder="Search notes...">
+        </div>
+      </div>
+
+      <!-- New Note Button -->
+      <button id="btn-new-note" class="btn-new-note" data-i18n="newNote">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>New Note</span>
+      </button>
+
+      <!-- Notes List -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span data-i18n="allNotes">All Notes</span>
+          <span id="note-count" class="badge">0</span>
+        </div>
+        <div id="notes-list" class="notes-list" role="list">
+          <!-- Note items rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Folders -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span data-i18n="folders">Folders</span>
+          <button id="btn-new-folder" class="btn-icon-sm" aria-label="New folder" title="New folder">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+        <div id="folders-list" class="folders-list" role="list">
+          <!-- Folder items rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Countdowns -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span data-i18n="countdowns">Countdowns</span>
+          <button id="btn-new-countdown" class="btn-icon-sm" aria-label="New countdown" title="New countdown">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+        <div id="countdowns-list" class="countdowns-list" role="list">
+          <!-- Countdown items rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button id="btn-sync" class="btn-icon" aria-label="Sync" title="Sync with GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+        <button id="btn-settings" class="btn-icon" aria-label="Settings" title="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+          </svg>
+        </button>
+        <button id="btn-theme" class="btn-icon" aria-label="Toggle theme" title="Toggle theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main" class="main">
+      <!-- Editor Header -->
+      <header class="editor-header">
+        <div class="editor-header-left">
+          <button id="btn-sidebar-open" class="btn-icon sidebar-open-btn btn-sidebar-toggle hidden" aria-label="Open sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <input type="text" id="note-title" class="note-title-input" data-i18n-placeholder="untitled" placeholder="Untitled" spellcheck="false">
+        </div>
+        <div class="editor-header-right">
+          <!-- View Mode Toggle -->
+          <div class="view-toggle" role="tablist">
+            <button class="view-toggle-btn active" data-view="edit" role="tab" aria-selected="true" title="Edit">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            <button class="view-toggle-btn" data-view="split" role="tab" aria-selected="false" title="Split">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="12" y1="3" x2="12" y2="21"></line>
+              </svg>
+            </button>
+            <button class="view-toggle-btn" data-view="preview" role="tab" aria-selected="false" title="Preview">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Editor Toolbar -->
+          <div class="editor-toolbar">
+            <button class="toolbar-btn" data-action="bold" title="Bold (Ctrl+B)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+              </svg>
+            </button>
+            <button class="toolbar-btn" data-action="italic" title="Italic (Ctrl+I)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="4" x2="10" y2="4"></line>
+                <line x1="14" y1="20" x2="5" y2="20"></line>
+                <line x1="15" y1="4" x2="9" y2="20"></line>
+              </svg>
+            </button>
+            <button class="toolbar-btn" data-action="heading" title="Heading">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 4v16M18 4v16M6 12h12"></path>
+              </svg>
+            </button>
+            <span class="toolbar-divider"></span>
+            <button class="toolbar-btn" data-action="code" title="Code">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            </button>
+            <button class="toolbar-btn" data-action="math" title="Math (LaTeX)">
+              <span style="font-family:'Source Serif 4',serif;font-weight:500;font-size:14px;font-style:italic">∑</span>
+            </button>
+            <button class="toolbar-btn" data-action="link" title="Link">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </button>
+            <button class="toolbar-btn" data-action="list" title="List">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
+            <button class="toolbar-btn" data-action="checklist" title="Checklist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Word Count -->
+          <div id="word-count" class="word-count">
+            <span id="char-count">0</span> <span data-i18n="chars">chars</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Editor Body -->
+      <div class="editor-body">
+        <!-- Editor Pane -->
+        <div id="editor-pane" class="editor-pane">
+          <textarea id="editor" class="editor-textarea" spellcheck="false" data-i18n-placeholder="startWriting" placeholder="Start writing... (Markdown & LaTeX supported)"></textarea>
+        </div>
+        <!-- Resize Handle -->
+        <div id="resize-handle" class="resize-handle hidden">
+          <div class="resize-handle-line"></div>
+        </div>
+        <!-- Preview Pane -->
+        <div id="preview-pane" class="preview-pane hidden">
+          <div id="preview" class="preview-content markdown-body"></div>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <footer class="status-bar">
+        <div class="status-left">
+          <span id="status-sync" class="status-item status-sync" title="Sync status">
+            <span class="status-dot"></span>
+            <span data-i18n="local">Local</span>
+          </span>
+          <span id="status-saved" class="status-item" data-i18n="saved">Saved</span>
+        </div>
+        <div class="status-right">
+          <button id="btn-font-switch" class="status-btn" title="Switch font">
+            <span id="current-font-label">Sans</span>
+          </button>
+          <button id="btn-lang-switch" class="status-btn" title="Switch language">
+            <span id="current-lang-label">EN</span>
+          </button>
+        </div>
+      </footer>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-state-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <p class="empty-state-text" data-i18n="emptyState">Select a note or create a new one</p>
+        <p class="empty-state-hint" data-i18n="emptyStateHint">Press Ctrl+N to create a new note</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="settings-title" data-i18n="settings">Settings</h2>
+        <button class="modal-close btn-icon" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- GitHub Sync Settings -->
+        <div class="settings-section">
+          <h3 data-i18n="githubSync">GitHub Sync</h3>
+          <div class="setting-item">
+            <label for="github-token" data-i18n="personalAccessToken">Personal Access Token</label>
+            <input type="password" id="github-token" class="setting-input" placeholder="ghp_...">
+            <p class="setting-hint" data-i18n="tokenHint">Create a token with 'gist' scope at github.com/settings/tokens</p>
+          </div>
+          <div class="setting-item">
+            <label for="gist-id" data-i18n="gistId">Gist ID (optional)</label>
+            <input type="text" id="gist-id" class="setting-input" placeholder="Leave empty to create new">
+            <p class="setting-hint" data-i18n="gistIdHint">Leave empty to create a new Gist on first sync</p>
+          </div>
+          <div class="setting-item">
+            <label class="toggle-label">
+              <span data-i18n="autoSync">Auto Sync</span>
+              <input type="checkbox" id="auto-sync-toggle" class="toggle-input">
+              <span class="toggle-switch"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="settings-section">
+          <h3 data-i18n="appearance">Appearance</h3>
+          <div class="setting-item">
+            <label data-i18n="font">Font</label>
+            <div class="font-selector" id="font-selector">
+              <button class="font-option active" data-font="sans">
+                <span style="font-family:'IBM Plex Sans',sans-serif">Sans</span>
+              </button>
+              <button class="font-option" data-font="serif">
+                <span style="font-family:'Source Serif 4',serif">Serif</span>
+              </button>
+              <button class="font-option" data-font="mono">
+                <span style="font-family:'IBM Plex Mono',monospace">Mono</span>
+              </button>
+              <button class="font-option" data-font="literary">
+                <span style="font-family:'Cormorant Garamond',serif">Literary</span>
+              </button>
+            </div>
+          </div>
+          <div class="setting-item">
+            <label data-i18n="fontSize">Font Size</label>
+            <div class="range-wrapper">
+              <input type="range" id="font-size-range" min="12" max="22" value="16" class="range-input">
+              <span id="font-size-value" class="range-value">16px</span>
+            </div>
+          </div>
+          <div class="setting-item">
+            <label data-i18n="editorWidth">Editor Width</label>
+            <div class="range-wrapper">
+              <input type="range" id="editor-width-range" min="600" max="1200" value="800" step="50" class="range-input">
+              <span id="editor-width-value" class="range-value">800px</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Language -->
+        <div class="settings-section">
+          <h3 data-i18n="language">Language</h3>
+          <div class="setting-item">
+            <div class="lang-selector" id="lang-selector">
+              <button class="lang-option active" data-lang="en">English</button>
+              <button class="lang-option" data-lang="zh">中文</button>
+              <button class="lang-option" data-lang="ja">日本語</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export -->
+        <div class="settings-section">
+          <h3 data-i18n="export">Export</h3>
+          <div class="setting-item setting-actions">
+            <button id="btn-export-md" class="btn-secondary" data-i18n="exportMd">Export as Markdown</button>
+            <button id="btn-export-html" class="btn-secondary" data-i18n="exportHtml">Export as HTML</button>
+            <button id="btn-export-all" class="btn-secondary" data-i18n="exportAll">Export All Notes</button>
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div class="settings-section">
+          <h3 data-i18n="data">Data</h3>
+          <div class="setting-item setting-actions">
+            <button id="btn-import" class="btn-secondary" data-i18n="importNotes">Import Notes</button>
+            <button id="btn-clear-data" class="btn-danger" data-i18n="clearAll">Clear All Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Countdown Modal -->
+  <div id="countdown-modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2 data-i18n="newCountdown">New Countdown</h2>
+        <button class="modal-close btn-icon" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item">
+          <label for="countdown-name" data-i18n="eventName">Event Name</label>
+          <input type="text" id="countdown-name" class="setting-input" data-i18n-placeholder="eventNamePlaceholder" placeholder="e.g., Project Deadline">
+        </div>
+        <div class="setting-item">
+          <label for="countdown-date" data-i18n="targetDate">Target Date</label>
+          <input type="datetime-local" id="countdown-date" class="setting-input">
+        </div>
+        <div class="setting-item">
+          <label for="countdown-color" data-i18n="color">Color</label>
+          <div class="color-picker" id="countdown-colors">
+            <button class="color-dot active" data-color="#7C9885" style="background:#7C9885"></button>
+            <button class="color-dot" data-color="#9B8EA7" style="background:#9B8EA7"></button>
+            <button class="color-dot" data-color="#C4956A" style="background:#C4956A"></button>
+            <button class="color-dot" data-color="#8BA4B8" style="background:#8BA4B8"></button>
+            <button class="color-dot" data-color="#C97B7B" style="background:#C97B7B"></button>
+          </div>
+        </div>
+        <div class="setting-item">
+          <button id="btn-save-countdown" class="btn-primary" data-i18n="save">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Folder Modal -->
+  <div id="folder-modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h2 data-i18n="newFolder">New Folder</h2>
+        <button class="modal-close btn-icon" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item">
+          <label for="folder-name" data-i18n="folderName">Folder Name</label>
+          <input type="text" id="folder-name" class="setting-input" data-i18n-placeholder="folderNamePlaceholder" placeholder="e.g., Work Notes">
+        </div>
+        <div class="setting-item">
+          <button id="btn-save-folder" class="btn-primary" data-i18n="save">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  <div id="context-menu" class="context-menu" role="menu">
+    <button class="context-menu-item" data-action="rename" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+      </svg>
+      <span data-i18n="rename">Rename</span>
+    </button>
+    <button class="context-menu-item" data-action="move" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span data-i18n="moveToFolder">Move to Folder</span>
+    </button>
+    <button class="context-menu-item" data-action="duplicate" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      <span data-i18n="duplicate">Duplicate</span>
+    </button>
+    <div class="context-menu-divider"></div>
+    <button class="context-menu-item danger" data-action="delete" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+      <span data-i18n="delete">Delete</span>
+    </button>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="file-import" accept=".json,.md,.txt" multiple hidden>
+
+  <!-- App Scripts (ES Modules) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
