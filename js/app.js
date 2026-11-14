@@ -502,7 +502,7 @@ const Editor = {
     this.showEditor(true);
 
     // Trigger Typora re-render for new note
-    if (typeof TyporaMode !== 'undefined') TyporaMode.scheduleRender(300);
+    if (typeof TyporaMode !== 'undefined') TyporaMode.refresh();
 
     // Mark active in sidebar
     document.querySelectorAll('.note-item').forEach(el => el.classList.toggle('active', el.dataset.id === noteId));
@@ -651,7 +651,6 @@ const Editor = {
     this.updateCharCount();
     this.scheduleSave();
     if (this.viewMode !== 'edit') this.schedulePreview();
-    TyporaMode.scheduleRender();
   },
 
   // ── Resize handle for split view ─────────────────────────────────
@@ -690,36 +689,32 @@ const Editor = {
    ═══════════════════════════════════════════════════════════════════ */
 
 const TyporaMode = {
-  _renderTimer: null,
-  _reactivateTimer: null,
   _active: false,
 
   get _pane()    { return document.getElementById('editor-pane'); },
   get _overlay() { return document.getElementById('typora-overlay'); },
   get _ta()      { return Editor.el.editor; },
 
-  scheduleRender(delay) {
-    delay = delay === undefined ? 400 : delay;
-    clearTimeout(this._renderTimer);
-    this._renderTimer = setTimeout(() => this._render(), delay);
+  /* ── Public: show overlay (called on textarea blur) ── */
+  activate() {
+    const ta = this._ta;
+    if (!ta || !ta.value.trim()) return;
+    this._render();
   },
 
+  /* ── Public: hide overlay (called on textarea focus / keydown) ── */
   deactivate() {
+    if (!this._active) return;
     this._active = false;
     this._pane && this._pane.classList.remove('typora-active');
-    clearTimeout(this._reactivateTimer);
-    this._reactivateTimer = setTimeout(() => this.scheduleRender(0), 1200);
   },
 
+  /* ── Render markdown into overlay ── */
   _render() {
     const ta = this._ta;
     const overlay = this._overlay;
-    if (!ta || !overlay) return;
-    if (!ta.value.trim()) {
-      this._active = false;
-      this._pane && this._pane.classList.remove('typora-active');
-      return;
-    }
+    if (!ta || !overlay || !ta.value.trim()) { this.deactivate(); return; }
+
     overlay.innerHTML = this._renderAnnotated(ta.value);
     overlay.scrollTop = ta.scrollTop;
     this._active = true;
@@ -727,19 +722,15 @@ const TyporaMode = {
     this._bindBlockClicks();
   },
 
+  /* ── Split into blocks, render each separately to avoid marker bleed ── */
   _renderAnnotated(md) {
-    // Split markdown into logical blocks, render each with data-line.
-    // This avoids any marker contamination inside the renderer.
     const lines = md.split('\n');
-    const blocks = [];   // { startLine, text }
+    const blocks = [];
     let i = 0;
 
     while (i < lines.length) {
       const line = lines[i];
-
-      // Skip blank lines
       if (!line.trim()) { i++; continue; }
-
       const startLine = i;
 
       // Fenced code block
@@ -747,27 +738,22 @@ const TyporaMode = {
         let text = line + '\n'; i++;
         while (i < lines.length && !/^`{3,}/.test(lines[i])) { text += lines[i] + '\n'; i++; }
         if (i < lines.length) { text += lines[i] + '\n'; i++; }
-        blocks.push({ startLine, text });
-        continue;
+        blocks.push({ startLine, text }); continue;
       }
       // Block math $$
       if (/^\$\$/.test(line)) {
         let text = line + '\n'; i++;
         while (i < lines.length && !/^\$\$/.test(lines[i])) { text += lines[i] + '\n'; i++; }
         if (i < lines.length) { text += lines[i] + '\n'; i++; }
-        blocks.push({ startLine, text });
-        continue;
+        blocks.push({ startLine, text }); continue;
       }
       // Heading
-      if (/^#{1,6}\s/.test(line)) {
-        blocks.push({ startLine, text: line + '\n' }); i++; continue;
-      }
+      if (/^#{1,6}\s/.test(line)) { blocks.push({ startLine, text: line + '\n' }); i++; continue; }
       // Blockquote
       if (/^>/.test(line)) {
         let text = '';
         while (i < lines.length && /^>/.test(lines[i])) { text += lines[i] + '\n'; i++; }
-        blocks.push({ startLine, text });
-        continue;
+        blocks.push({ startLine, text }); continue;
       }
       // HR
       if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
@@ -779,28 +765,24 @@ const TyporaMode = {
         while (i < lines.length && (/^(\s*[-*+]|\s*\d+\.)/.test(lines[i]) || (lines[i].length > 0 && /^\s{2,}/.test(lines[i])))) {
           text += lines[i] + '\n'; i++;
         }
-        blocks.push({ startLine, text });
-        continue;
+        blocks.push({ startLine, text }); continue;
       }
-      // Paragraph — consume until blank line
+      // Paragraph
       let text = '';
       while (i < lines.length && lines[i].trim()) { text += lines[i] + '\n'; i++; }
       blocks.push({ startLine, text });
     }
 
-    // Render each block and wrap with a data-line span
     return blocks.map(({ startLine, text }) => {
       const html = Renderer.render(text.trim());
-      // Inject data-line onto the first tag in the rendered HTML
-      const injected = html.replace(/^(\s*<[a-zA-Z][^>]*)/, (m, tag) => {
-        // avoid double-inject
-        if (tag.includes('data-line')) return m;
-        return tag + ` data-line="${startLine}"`;
-      });
-      return injected;
+      // Inject data-line onto first element tag
+      return html.replace(/^(\s*<[a-zA-Z][^>]*)/, (m, tag) =>
+        tag.includes('data-line') ? m : tag + ` data-line="${startLine}"`
+      );
     }).join('\n');
   },
 
+  /* ── Bind click-to-edit on each rendered block ── */
   _bindBlockClicks() {
     const overlay = this._overlay;
     if (!overlay) return;
@@ -810,42 +792,56 @@ const TyporaMode = {
         this._jumpToLine(parseInt(el.dataset.line, 10));
       });
     });
-    overlay.addEventListener('click', () => { if (this._active) this.deactivate(); }, { once: true });
   },
 
+  /* ── Jump cursor to source line, switch to edit mode ── */
   _jumpToLine(lineNum) {
     const ta = this._ta;
     if (!ta) return;
     const lines = ta.value.split('\n');
     let pos = 0;
     for (let i = 0; i < Math.min(lineNum, lines.length); i++) pos += lines[i].length + 1;
-    this.deactivate();
+    // focus triggers the focus-listener → deactivate overlay
     ta.focus();
     ta.selectionStart = ta.selectionEnd = pos;
   },
 
-  handleKeydown(e) {
-    // Any edit key → hide overlay, schedule re-render
-    const editKeys = new Set(['Enter','Backspace','Delete','Tab']);
-    if (this._active && (e.key.length === 1 || editKeys.has(e.key))) {
-      this._active = false;
-      this._pane && this._pane.classList.remove('typora-active');
-      this.scheduleRender(500);
-    }
-  },
-
+  /* ── Keep overlay scroll in sync ── */
   handleScroll() {
     if (this._active && this._overlay && this._ta) {
       this._overlay.scrollTop = this._ta.scrollTop;
     }
   },
 
+  /* ── Init: wire blur/focus events ── */
   init() {
     const ta = this._ta;
     if (!ta) return;
-    ta.addEventListener('keydown', (e) => this.handleKeydown(e));
+
+    // Textarea gains focus → show raw (hide overlay)
+    ta.addEventListener('focus', () => this.deactivate());
+
+    // Textarea loses focus → show overlay
+    // Small delay so a click on overlay registers before blur fires
+    ta.addEventListener('blur', () => setTimeout(() => {
+      // Only activate if focus didn't go into the overlay itself
+      if (document.activeElement !== ta) this.activate();
+    }, 80));
+
     ta.addEventListener('scroll', () => this.handleScroll(), { passive: true });
-    setTimeout(() => this._render(), 500);
+
+    // Initial render (after first note loads, ta is not focused yet)
+    setTimeout(() => {
+      if (document.activeElement !== ta) this.activate();
+    }, 900);
+  },
+
+  /* ── Re-render overlay after note switch (called from Editor.open) ── */
+  refresh() {
+    // Slight delay to let Editor.open() finish setting textarea value
+    setTimeout(() => {
+      if (document.activeElement !== this._ta) this.activate();
+    }, 100);
   },
 };
 
@@ -1771,6 +1767,16 @@ const App = {
 
   init() {
     Editor.cacheElements();
+
+    // 0. One-time migration: strip %%TY_LINE_N%% artifacts from note content
+    (function migrateNotes() {
+      const notes = Store.getNotes();
+      const dirty = notes.filter(n => /%%TY_LINE_\d+%%/.test(n.content || ''));
+      if (dirty.length > 0) {
+        dirty.forEach(n => { n.content = (n.content || '').replace(/%%TY_LINE_\d+%%\n?/g, ''); });
+        Store.setNotes(notes);
+      }
+    })();
 
     // 1. Load settings & apply
     const settings = Store.getSettings();
