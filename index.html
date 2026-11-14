@@ -64,6 +64,23 @@
         </div>
       </div>
 
+      <!-- Day Streak Widget -->
+      <div class="streak-widget" id="streak-widget" role="button" tabindex="0" title="Writing Streak">
+        <div class="streak-header">
+          <div class="streak-info">
+            <svg class="streak-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2c0 4-3 6-3 9.5a6 6 0 0 0 12 0c0-3.5-3-5.5-3-9.5-1.5 2-3 3-6 0z"/>
+            </svg>
+            <span class="streak-count" id="streak-count">1</span>
+            <span class="streak-label" data-i18n="daysStreak">day streak</span>
+          </div>
+          <span class="streak-badge" id="streak-badge" data-i18n="streakLogged">Written</span>
+        </div>
+        <div class="streak-week" id="streak-week">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
       <!-- New Note Button -->
       <button id="btn-new-note" class="btn-new-note" data-i18n="newNote">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -328,6 +345,47 @@
         <!-- Appearance -->
         <div class="settings-section">
           <h3 data-i18n="appearance">Appearance</h3>
+          <div class="setting-item">
+            <label data-i18n="theme">Theme Palette</label>
+            <div class="theme-palette" id="theme-palette">
+              <button class="theme-card active" data-theme="paper" title="Paper">
+                <span class="theme-swatch" style="background:#FAFAF9; border-color:#E8E8E6;">
+                  <span class="theme-accent-dot" style="background:#7C9885;"></span>
+                </span>
+                <span class="theme-name" data-i18n="themePaper">Paper</span>
+              </button>
+              <button class="theme-card" data-theme="nordic" title="Nordic">
+                <span class="theme-swatch" style="background:#F6F8FA; border-color:#DEE4EA;">
+                  <span class="theme-accent-dot" style="background:#4E738C;"></span>
+                </span>
+                <span class="theme-name" data-i18n="themeNordic">Nordic</span>
+              </button>
+              <button class="theme-card" data-theme="matcha" title="Matcha">
+                <span class="theme-swatch" style="background:#F7F8F4; border-color:#DFE5DA;">
+                  <span class="theme-accent-dot" style="background:#5E7E5A;"></span>
+                </span>
+                <span class="theme-name" data-i18n="themeMatcha">Matcha</span>
+              </button>
+              <button class="theme-card" data-theme="sepia" title="Sepia">
+                <span class="theme-swatch" style="background:#F7F4EC; border-color:#DFD7C8;">
+                  <span class="theme-accent-dot" style="background:#8E6B47;"></span>
+                </span>
+                <span class="theme-name" data-i18n="themeSepia">Sepia</span>
+              </button>
+              <button class="theme-card" data-theme="dusk" title="Dusk">
+                <span class="theme-swatch" style="background:#1A1A1E; border-color:#35353C;">
+                  <span class="theme-accent-dot" style="background:#8CAE97;"></span>
+                </span>
+                <span class="theme-name" data-i18n="themeDusk">Dusk</span>
+              </button>
+              <button class="theme-card" data-theme="midnight" title="Midnight">
+                <span class="theme-swatch" style="background:#0C0C0E; border-color:#26262D;">
+                  <span class="theme-accent-dot" style="background:#7899BD;"></span>
+                </span>
+                <span class="theme-name" data-i18n="themeMidnight">Midnight</span>
+              </button>
+            </div>
+          </div>
           <div class="setting-item">
             <label data-i18n="font">Font</label>
             <div class="font-selector" id="font-selector">

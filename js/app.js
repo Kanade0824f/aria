@@ -158,7 +158,7 @@ const Store = {
 - **English**: Every line and margin is carefully calibrated.
 - **日本語**：静寂の中に、思考が研ぎ澄まされる。
 
-> 💡 **提示**：點擊右下角狀態欄的字體切換鈕（如 **Sans**），可在 **Sans（無襯線）**、**Serif（精緻襯線）**、**Mono（等寬字體）** 與 **Literary（古典文藝）** 之間即時切換。
+> ✦ **排版指南**：點擊右下角狀態欄的字體切換鈕（如 **Sans**），可在 **Sans（無襯線）**、**Serif（精緻襯線）**、**Mono（等寬字體）** 與 **Literary（古典文藝）** 之間即時切換。
 
 ---
 
@@ -254,7 +254,7 @@ console.log('Welcome to aria.');
 
     const sampleCountdown = {
       id: this.uuid(),
-      name: '重要目標倒數 🎯',
+      name: '重要里程碑發布',
       targetDate: target.toISOString().slice(0, 16),
       color: '#7C9885',
       createdAt: new Date().toISOString(),
@@ -314,6 +314,8 @@ const translations = {
     clearConfirm: 'This will delete all data. Continue?',
     days: 'd', hours: 'h', minutes: 'm', seconds: 's', expired: 'Expired',
     allNotesFolder: 'All', noResults: 'No notes found',
+    theme: 'Theme', themePaper: 'Paper', themeNordic: 'Nordic', themeMatcha: 'Matcha', themeSepia: 'Sepia', themeDusk: 'Dusk', themeMidnight: 'Midnight',
+    daysStreak: 'day streak', streakLogged: 'Written', streakPending: 'Pending', streakToast: 'Writing streak: {curr} days (Best: {best} days)',
   },
   zh: {
     search: '搜尋筆記...', newNote: '新增筆記', allNotes: '全部筆記',
@@ -341,6 +343,8 @@ const translations = {
     clearConfirm: '這將刪除所有資料。繼續？',
     days: '天', hours: '時', minutes: '分', seconds: '秒', expired: '已過期',
     allNotesFolder: '全部', noResults: '找不到筆記',
+    theme: '主題風格', themePaper: '宣紙', themeNordic: '北歐', themeMatcha: '抹茶', themeSepia: '古卷', themeDusk: '暮夜', themeMidnight: '極夜',
+    daysStreak: '天連續記錄', streakLogged: '今日已記', streakPending: '待記錄', streakToast: '已連續寫作 {curr} 天（最佳紀錄 {best} 天）',
   },
   ja: {
     search: 'ノートを検索...', newNote: '新規ノート', allNotes: 'すべてのノート',
@@ -369,6 +373,8 @@ const translations = {
     clearConfirm: 'すべてのデータが削除されます。続行しますか？',
     days: '日', hours: '時間', minutes: '分', seconds: '秒', expired: '期限切れ',
     allNotesFolder: 'すべて', noResults: 'ノートが見つかりません',
+    theme: 'テーマ', themePaper: '和紙', themeNordic: '北欧', themeMatcha: '抹茶', themeSepia: 'セピア', themeDusk: '夕暮れ', themeMidnight: '真夜中',
+    daysStreak: '日連続記録', streakLogged: '記録済み', streakPending: '未記録', streakToast: '連続執筆 {curr} 日目（最高記録 {best} 日）',
   },
 };
 
@@ -566,6 +572,7 @@ const Editor = {
     Store.updateNote(this.currentNoteId, { title, content });
     this.setSaveStatus('saved');
     App.renderNotesList();
+    Streak.recordActivity();
   },
 
   setSaveStatus(status) {
@@ -1013,19 +1020,41 @@ const ContextMenu = {
    ═══════════════════════════════════════════════════════════════════ */
 
 const Appearance = {
+  THEMES: ['paper', 'nordic', 'matcha', 'sepia', 'dusk', 'midnight'],
+
   applyTheme(theme) {
-    document.documentElement.dataset.theme = theme;
-    // Toggle highlight.js stylesheets
+    let resolved = theme || 'paper';
+    if (resolved === 'light') resolved = 'paper';
+    if (resolved === 'dark') resolved = 'dusk';
+
+    document.documentElement.dataset.theme = resolved;
+
+    // Toggle highlight.js stylesheets for dark themes
+    const isDark = resolved === 'dusk' || resolved === 'midnight';
     const lightSheet = document.getElementById('hljs-light');
     const darkSheet = document.getElementById('hljs-dark');
-    if (lightSheet) lightSheet.disabled = theme === 'dark';
-    if (darkSheet) darkSheet.disabled = theme !== 'dark';
-    Store.saveSettings({ theme });
+    if (lightSheet) lightSheet.disabled = isDark;
+    if (darkSheet) darkSheet.disabled = !isDark;
+
+    // Update active state in theme-palette in settings modal
+    document.querySelectorAll('.theme-card').forEach(card => {
+      card.classList.toggle('active', card.dataset.theme === resolved);
+    });
+
+    Store.saveSettings({ theme: resolved });
   },
 
   toggleTheme() {
-    const current = Store.getSettings().theme;
-    this.applyTheme(current === 'dark' ? 'light' : 'dark');
+    this.cycleTheme();
+  },
+
+  cycleTheme() {
+    const current = document.documentElement.dataset.theme || 'paper';
+    const idx = this.THEMES.indexOf(current);
+    const next = this.THEMES[(idx + 1) % this.THEMES.length];
+    this.applyTheme(next);
+    const themeKey = 'theme' + next.charAt(0).toUpperCase() + next.slice(1);
+    Toast.show(`${I18n.t('theme')}: ${I18n.t(themeKey) || next}`, 'info', 1800);
   },
 
   applyFont(font) {
@@ -1072,6 +1101,127 @@ const Appearance = {
     // Update selector active state
     document.querySelectorAll('.lang-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.lang === next));
+  },
+};
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   §9b STREAK — Writing Habit Tracker
+   ═══════════════════════════════════════════════════════════════════ */
+
+const Streak = {
+  KEY: 'aria_streak',
+
+  getData() {
+    try {
+      const today = this._todayStr();
+      const def = { currentStreak: 1, longestStreak: 1, lastActiveDate: today, history: [today] };
+      const raw = localStorage.getItem(this.KEY);
+      return raw ? { ...def, ...JSON.parse(raw) } : def;
+    } catch {
+      const today = this._todayStr();
+      return { currentStreak: 1, longestStreak: 1, lastActiveDate: today, history: [today] };
+    }
+  },
+
+  saveData(data) {
+    localStorage.setItem(this.KEY, JSON.stringify(data));
+  },
+
+  _todayStr() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
+  recordActivity() {
+    const data = this.getData();
+    const today = this._todayStr();
+
+    if (!data.history) data.history = [];
+    if (!data.history.includes(today)) {
+      data.history.push(today);
+      if (data.history.length > 60) data.history.shift();
+    }
+
+    if (data.lastActiveDate === today) {
+      this.render();
+      return;
+    }
+
+    const lastDate = new Date(data.lastActiveDate);
+    const currDate = new Date(today);
+    const diffTime = currDate - lastDate;
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      data.currentStreak = (data.currentStreak || 0) + 1;
+    } else if (diffDays > 1) {
+      data.currentStreak = 1;
+    }
+
+    data.longestStreak = Math.max(data.longestStreak || 1, data.currentStreak);
+    data.lastActiveDate = today;
+
+    this.saveData(data);
+    this.render();
+  },
+
+  render() {
+    const data = this.getData();
+    const today = this._todayStr();
+    const isTodayLogged = data.lastActiveDate === today;
+
+    const countEl = document.getElementById('streak-count');
+    const badgeEl = document.getElementById('streak-badge');
+    const weekEl = document.getElementById('streak-week');
+
+    if (countEl) countEl.textContent = data.currentStreak || 1;
+    if (badgeEl) {
+      badgeEl.textContent = isTodayLogged ? I18n.t('streakLogged') : I18n.t('streakPending');
+      badgeEl.classList.toggle('pending', !isTodayLogged);
+    }
+
+    if (weekEl) {
+      weekEl.innerHTML = '';
+      const now = new Date();
+      const dayLabels = {
+        en: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+        zh: ['日', '一', '二', '三', '四', '五', '六'],
+        ja: ['日', '月', '火', '水', '木', '金', '土'],
+      };
+      const labels = dayLabels[I18n.lang] || dayLabels.en;
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dayNum = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${dayNum}`;
+
+        const isWritten = data.history && data.history.includes(dateStr);
+        const isToday = i === 0;
+
+        const dotWrap = document.createElement('div');
+        dotWrap.className = 'streak-day-dot';
+        dotWrap.innerHTML = `
+          <div class="streak-circle${isWritten ? ' active' : ''}${isToday ? ' today' : ''}" title="${dateStr}"></div>
+          <span class="streak-day-label">${labels[d.getDay()]}</span>
+        `;
+        weekEl.appendChild(dotWrap);
+      }
+    }
+  },
+
+  showDetails() {
+    const data = this.getData();
+    const msg = I18n.t('streakToast')
+      .replace('{curr}', data.currentStreak || 1)
+      .replace('{best}', data.longestStreak || 1);
+    Toast.show(msg, 'info', 2500);
   },
 };
 
@@ -1247,6 +1397,7 @@ const App = {
     this.renderFolders();
     this.renderNotesList();
     CountdownManager.render();
+    Streak.render();
   },
 
   // ── Notes list ───────────────────────────────────────────────────
@@ -1363,6 +1514,11 @@ const App = {
     });
     document.getElementById('btn-sidebar-open')?.addEventListener('click', () => {
       sidebar.classList.remove('collapsed');
+    });
+
+    // --- Streak widget ---
+    document.getElementById('streak-widget')?.addEventListener('click', () => {
+      Streak.showDetails();
     });
 
     // --- Search ---
@@ -1526,6 +1682,11 @@ const App = {
       else GitHubSync.stopAutoSync();
     });
 
+    // Theme options in settings
+    document.querySelectorAll('.theme-card').forEach(card => {
+      card.addEventListener('click', () => Appearance.applyTheme(card.dataset.theme));
+    });
+
     // Font options in settings
     document.querySelectorAll('.font-option').forEach(opt => {
       opt.addEventListener('click', () => Appearance.applyFont(opt.dataset.font));
@@ -1579,6 +1740,7 @@ const App = {
     this.renderNotesList();
     Editor.open(note.id);
     Editor.el.title?.focus();
+    Streak.recordActivity();
   },
 
   handleShortcut(e) {

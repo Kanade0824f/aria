@@ -59,8 +59,10 @@
   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.10);
 }
 
-/* --- Light Theme --- */
-[data-theme="light"] {
+/* --- Themes --- */
+/* 1. Paper / 宣紙 (Default Light) */
+[data-theme="light"],
+[data-theme="paper"] {
   --bg: #FAFAF9;
   --bg-secondary: #F3F3F1;
   --surface: #FFFFFF;
@@ -79,30 +81,123 @@
   --scrollbar-thumb-hover: #BDBDBA;
   --selection-bg: #D4E6DA;
   --code-bg: #F5F5F3;
-  --shadow-color: rgba(0, 0, 0, 0.06);
+  --shadow-color: rgba(0, 0, 0, 0.05);
 }
 
-/* --- Dark Theme --- */
-[data-theme="dark"] {
+/* 2. Nordic / 北歐極簡 (Crisp Architectural Slate) */
+[data-theme="nordic"] {
+  --bg: #F6F8FA;
+  --bg-secondary: #EDF1F5;
+  --surface: #FFFFFF;
+  --border: #DEE4EA;
+  --border-light: #EAEFF4;
+  --text: #192028;
+  --text-secondary: #607182;
+  --text-tertiary: #94A3B3;
+  --accent: #4E738C;
+  --accent-hover: #3E6077;
+  --accent-light: #E4ECF2;
+  --danger: #C26D6D;
+  --danger-light: #F6EBEB;
+
+  --scrollbar-thumb: #CBD5E0;
+  --scrollbar-thumb-hover: #A0AEC0;
+  --selection-bg: #D2E3F0;
+  --code-bg: #EEF3F7;
+  --shadow-color: rgba(30, 45, 60, 0.06);
+}
+
+/* 3. Matcha / 宇治抹茶 (Zen Aesthetic) */
+[data-theme="matcha"] {
+  --bg: #F7F8F4;
+  --bg-secondary: #EDF0E8;
+  --surface: #FCFCFA;
+  --border: #DFE5DA;
+  --border-light: #EAEEE6;
+  --text: #1C241B;
+  --text-secondary: #5C6E5A;
+  --text-tertiary: #8F9E8E;
+  --accent: #5E7E5A;
+  --accent-hover: #4E6B4B;
+  --accent-light: #E5EFE4;
+  --danger: #BA6E6E;
+  --danger-light: #F4EAEA;
+
+  --scrollbar-thumb: #CCD6C7;
+  --scrollbar-thumb-hover: #ABB8A6;
+  --selection-bg: #D8E6D7;
+  --code-bg: #EFF3EC;
+  --shadow-color: rgba(30, 45, 25, 0.06);
+}
+
+/* 4. Sepia / 羊皮古卷 (Scholarly Vintage) */
+[data-theme="sepia"] {
+  --bg: #F7F4EC;
+  --bg-secondary: #EBE5DB;
+  --surface: #FCFAF5;
+  --border: #DFD7C8;
+  --border-light: #EAE3D6;
+  --text: #262018;
+  --text-secondary: #746757;
+  --text-tertiary: #A19586;
+  --accent: #8E6B47;
+  --accent-hover: #795836;
+  --accent-light: #EDE4D8;
+  --danger: #BA6868;
+  --danger-light: #F4E8E8;
+
+  --scrollbar-thumb: #D5CCBE;
+  --scrollbar-thumb-hover: #B8ADA0;
+  --selection-bg: #E8DDCF;
+  --code-bg: #EFE9DE;
+  --shadow-color: rgba(45, 35, 20, 0.06);
+}
+
+/* 5. Dusk / 暮夜星霜 (Default Dark) */
+[data-theme="dark"],
+[data-theme="dusk"] {
   --bg: #1A1A1E;
   --bg-secondary: #222226;
-  --surface: #2A2A2F;
-  --border: #3A3A3F;
-  --border-light: #2F2F34;
+  --surface: #27272D;
+  --border: #35353C;
+  --border-light: #2D2D34;
   --text: #E8E8E6;
-  --text-secondary: #9B9B9B;
-  --text-tertiary: #6B6B6B;
+  --text-secondary: #9B9BA0;
+  --text-tertiary: #6E6E74;
   --accent: #8CAE97;
   --accent-hover: #9DC0A8;
-  --accent-light: #2A3A2F;
+  --accent-light: #243528;
   --danger: #D99B9B;
   --danger-light: #3A2A2A;
 
-  --scrollbar-thumb: #4A4A50;
-  --scrollbar-thumb-hover: #5A5A62;
-  --selection-bg: #2E4A36;
-  --code-bg: #24242A;
-  --shadow-color: rgba(0, 0, 0, 0.25);
+  --scrollbar-thumb: #45454E;
+  --scrollbar-thumb-hover: #575762;
+  --selection-bg: #2B4533;
+  --code-bg: #212127;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 6. Midnight / 曜石極夜 (OLED Deep Black) */
+[data-theme="midnight"] {
+  --bg: #0C0C0E;
+  --bg-secondary: #141418;
+  --surface: #19191E;
+  --border: #26262D;
+  --border-light: #1E1E24;
+  --text: #EEEEF0;
+  --text-secondary: #90909A;
+  --text-tertiary: #60606B;
+  --accent: #7899BD;
+  --accent-hover: #8DADD1;
+  --accent-light: #182838;
+  --danger: #D48E8E;
+  --danger-light: #361F1F;
+
+  --scrollbar-thumb: #303038;
+  --scrollbar-thumb-hover: #42424E;
+  --selection-bg: #20354A;
+  --code-bg: #131317;
+  --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
 
@@ -402,6 +497,115 @@ img {
   border-color: var(--accent);
   background-color: var(--surface);
   box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* --- Day Streak Widget --- */
+.streak-widget {
+  margin: 0 var(--sp-4) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius);
+  transition: border-color var(--duration) var(--ease-out),
+              box-shadow var(--duration) var(--ease-out);
+  cursor: pointer;
+  user-select: none;
+}
+
+.streak-widget:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.streak-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-2);
+}
+
+.streak-info {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  color: var(--text);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+.streak-icon {
+  color: var(--accent);
+  stroke-width: 1.6;
+  flex-shrink: 0;
+}
+
+.streak-count {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--accent);
+  margin-left: 2px;
+}
+
+.streak-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.streak-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background-color: var(--accent-light);
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all var(--duration) var(--ease-out);
+}
+
+.streak-badge.pending {
+  background-color: var(--bg-secondary);
+  color: var(--text-tertiary);
+}
+
+.streak-week {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-1) 2px 0;
+}
+
+.streak-day-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.streak-day-label {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.streak-circle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background-color: transparent;
+  transition: all var(--duration) var(--ease-out);
+}
+
+.streak-circle.active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.streak-circle.today {
+  border-color: var(--accent);
+  border-width: 1.5px;
 }
 
 /* New Note Button */
@@ -1489,6 +1693,67 @@ img {
 .toggle-input:focus-visible + .toggle-switch {
   outline: 1.5px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Theme Palette Swatches in Settings */
+.theme-palette {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-2);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: border-color var(--duration) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration) var(--ease-out);
+}
+
+.theme-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.theme-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent);
+  background-color: var(--surface);
+}
+
+.theme-swatch {
+  width: 44px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-accent-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.theme-name {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.theme-card.active .theme-name {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* Font Selector */
