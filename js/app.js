@@ -264,10 +264,9 @@ console.log('Welcome to aria.');
 
   // ── Settings ──────────────────────────────────────────────────────
   defaultSettings: {
-    theme: 'light', font: 'sans', customFont: '', fontSize: 15,
+    theme: 'light', font: 'sans', fontSize: 15,
     editorWidth: 720, language: 'en',
     githubToken: '', gistId: '', autoSync: false,
-    accentR: 124, accentG: 152, accentB: 133, darkMode: false,
   },
 
   getSettings() {
@@ -297,12 +296,9 @@ const translations = {
     gistId: 'Gist ID (optional)',
     gistIdHint: 'Leave empty to create a new Gist on first sync',
     autoSync: 'Auto Sync', appearance: 'Appearance', font: 'Font',
-    customFont: 'Custom Font', customFontPlaceholder: "e.g. 'Inter', 'Cascadia Code', 'Georgia'",
-    apply: 'Apply',
     fontSize: 'Font Size', editorWidth: 'Editor Width', language: 'Language',
     export: 'Export', exportMd: 'Export as Markdown', exportHtml: 'Export as HTML',
-    exportAll: 'Export All Notes', exportEncrypted: 'Encrypted Backup (.aria)',
-    data: 'Data', importNotes: 'Import Notes', importEncrypted: 'Import Encrypted (.aria)',
+    exportAll: 'Export All Notes', data: 'Data', importNotes: 'Import Notes',
     clearAll: 'Clear All Data', newCountdown: 'New Countdown',
     eventName: 'Event Name', eventNamePlaceholder: 'e.g., Project Deadline',
     targetDate: 'Target Date', color: 'Color', save: 'Save',
@@ -320,13 +316,19 @@ const translations = {
     allNotesFolder: 'All', noResults: 'No notes found',
     theme: 'Theme', themePaper: 'Paper', themeNordic: 'Nordic', themeMatcha: 'Matcha', themeSepia: 'Sepia', themeDusk: 'Dusk', themeMidnight: 'Midnight',
     daysStreak: 'day streak', streakLogged: 'Written', streakPending: 'Pending', streakToast: 'Writing streak: {curr} days (Best: {best} days)',
-    encryptPrompt: 'Set an encryption password for this backup:',
-    decryptPrompt: 'Enter decryption password:',
-    encryptSuccess: 'Encrypted backup saved',
-    decryptSuccess: 'Decrypted and restored successfully',
-    decryptError: 'Incorrect password or corrupted file',
-    decryptInvalid: 'Invalid .aria file',
-    liveMode: 'Live (Typora)', sourceMode: 'Source',
+    customFont: 'Custom', customFontName: 'Custom Font Family',
+    customFontPlaceholder: 'e.g., PingFang SC, Microsoft YaHei, Inter, Fira Code...',
+    customFontHint: 'Enter any font installed on your system or loaded via web',
+    encryptedBackup: 'Encrypted Backup',
+    encryptedBackupHint: 'Zero-knowledge AES-256-GCM encryption. Your password never leaves your browser.',
+    exportEncrypted: 'Export Encrypted (.aria)', importEncrypted: 'Import Encrypted',
+    cryptoTitle: 'Encrypted Backup', password: 'Password', confirmPassword: 'Confirm Password',
+    confirm: 'Confirm', passwordMismatch: 'Passwords do not match', passwordEmpty: 'Password cannot be empty',
+    wrongPassword: 'Incorrect password or corrupted backup file',
+    backupExportSuccess: 'Encrypted backup saved successfully',
+    backupImportSuccess: 'Backup restored and decrypted successfully',
+    mathClickHint: 'Click or Backspace to edit formula',
+    lockHarmony: 'Harmonize (Locked)', unlockHarmony: 'Manual RGB (Unlocked)',
   },
   zh: {
     search: '搜尋筆記...', newNote: '新增筆記', allNotes: '全部筆記',
@@ -336,12 +338,9 @@ const translations = {
     gistId: 'Gist ID（可選）',
     gistIdHint: '留空以在首次同步時建立新的 Gist',
     autoSync: '自動同步', appearance: '外觀', font: '字體',
-    customFont: '自選字體', customFontPlaceholder: '自選字體（例如：霞鶩文楷、Inter、Noto Sans）',
-    apply: '套用',
     fontSize: '字體大小', editorWidth: '編輯器寬度', language: '語言',
     export: '匯出', exportMd: '匯出為 Markdown', exportHtml: '匯出為 HTML',
-    exportAll: '匯出全部筆記', exportEncrypted: '匯出加密備份 (.aria)',
-    data: '資料', importNotes: '匯入筆記', importEncrypted: '匯入加密備份 (.aria)',
+    exportAll: '匯出全部筆記', data: '資料', importNotes: '匯入筆記',
     clearAll: '清除所有資料', newCountdown: '新增倒數',
     eventName: '事件名稱', eventNamePlaceholder: '例：專案截止日',
     targetDate: '目標日期', color: '顏色', save: '儲存',
@@ -359,13 +358,19 @@ const translations = {
     allNotesFolder: '全部', noResults: '找不到筆記',
     theme: '主題風格', themePaper: '宣紙', themeNordic: '北歐', themeMatcha: '抹茶', themeSepia: '古卷', themeDusk: '暮夜', themeMidnight: '極夜',
     daysStreak: '天連續記錄', streakLogged: '今日已記', streakPending: '待記錄', streakToast: '已連續寫作 {curr} 天（最佳紀錄 {best} 天）',
-    encryptPrompt: '請設定備份檔的加密密碼：',
-    decryptPrompt: '請輸入解密密碼：',
-    encryptSuccess: '已儲存加密備份',
-    decryptSuccess: '解密並還原成功',
-    decryptError: '密碼錯誤或檔案已損毀',
-    decryptInvalid: '無效的 .aria 檔案',
-    liveMode: '即時渲染 (Typora)', sourceMode: '原始碼',
+    customFont: '自選字體', customFontName: '自選字體名稱',
+    customFontPlaceholder: '例如：PingFang SC, 微軟正黑體, 霞鶩文楷, Inter...',
+    customFontHint: '可輸入任意本機已安裝字體或線上字體名稱',
+    encryptedBackup: '加密備份存檔',
+    encryptedBackupHint: '採用端對端 AES-256-GCM 高強度加密，密碼絕不離開瀏覽器，保障純私密安全',
+    exportEncrypted: '加密匯出存檔 (.aria)', importEncrypted: '解密還原存檔',
+    cryptoTitle: '加密備份驗證', password: '加密密碼', confirmPassword: '確認密碼',
+    confirm: '確認執行', passwordMismatch: '兩次輸入的密碼不一致', passwordEmpty: '密碼不可為空',
+    wrongPassword: '密碼錯誤或存檔檔案損壞',
+    backupExportSuccess: '加密存檔已成功匯出並下載',
+    backupImportSuccess: '存檔已成功解密並還原所有資料',
+    mathClickHint: '點擊或按 Backspace 編輯公式代碼',
+    lockHarmony: '自動協調色彩 (已鎖定)', unlockHarmony: '自選調色 (已解鎖)',
   },
   ja: {
     search: 'ノートを検索...', newNote: '新規ノート', allNotes: 'すべてのノート',
@@ -375,13 +380,10 @@ const translations = {
     gistId: 'Gist ID（任意）',
     gistIdHint: '初回同期時に新しい Gist を作成するには空欄にしてください',
     autoSync: '自動同期', appearance: '外観', font: 'フォント',
-    customFont: 'カスタムフォント', customFontPlaceholder: 'フォント名（例: Inter, 游明朝）',
-    apply: '適用',
     fontSize: 'フォントサイズ', editorWidth: 'エディタ幅', language: '言語',
     export: 'エクスポート', exportMd: 'Markdownとしてエクスポート',
     exportHtml: 'HTMLとしてエクスポート', exportAll: 'すべてのノートをエクスポート',
-    exportEncrypted: '暗号化バックアップ (.aria)',
-    data: 'データ', importNotes: 'ノートをインポート', importEncrypted: '暗号化データをインポート (.aria)',
+    data: 'データ', importNotes: 'ノートをインポート',
     clearAll: 'すべてのデータを消去', newCountdown: '新規カウントダウン',
     eventName: 'イベント名', eventNamePlaceholder: '例：プロジェクト締切',
     targetDate: '目標日', color: 'カラー', save: '保存',
@@ -399,13 +401,19 @@ const translations = {
     allNotesFolder: 'すべて', noResults: 'ノートが見つかりません',
     theme: 'テーマ', themePaper: '和紙', themeNordic: '北欧', themeMatcha: '抹茶', themeSepia: 'セピア', themeDusk: '夕暮れ', themeMidnight: '真夜中',
     daysStreak: '日連続記録', streakLogged: '記録済み', streakPending: '未記録', streakToast: '連続執筆 {curr} 日目（最高記録 {best} 日）',
-    encryptPrompt: 'バックアップの暗号化パスワードを設定してください：',
-    decryptPrompt: '復号化パスワードを入力してください：',
-    encryptSuccess: '暗号化バックアップを保存しました',
-    decryptSuccess: '復号化と復元に成功しました',
-    decryptError: 'パスワードが間違っているか、ファイルが破損しています',
-    decryptInvalid: '無効な .aria ファイルです',
-    liveMode: 'リアルタイム (Typora)', sourceMode: 'ソース',
+    customFont: 'カスタム', customFontName: 'カスタムフォント名',
+    customFontPlaceholder: '例：Noto Sans JP, メイリオ, Inter...',
+    customFontHint: 'インストールされているフォント名を入力してください',
+    encryptedBackup: '暗号化バックアップ',
+    encryptedBackupHint: 'ブラウザ内 AES-256-GCM 暗号化。パスワードは端末外に送信されません',
+    exportEncrypted: '暗号化エクスポート (.aria)', importEncrypted: '暗号化インポート',
+    cryptoTitle: '暗号化認証', password: 'パスワード', confirmPassword: 'パスワード再入力',
+    confirm: '実行', passwordMismatch: 'パスワードが一致しません', passwordEmpty: 'パスワードを入力してください',
+    wrongPassword: 'パスワードが正しくないかファイルが破損しています',
+    backupExportSuccess: '暗号化バックアップを保存しました',
+    backupImportSuccess: 'バックアップを正常に復元しました',
+    mathClickHint: 'クリックまたは Backspace で数式を編集',
+    lockHarmony: '自動調和 (ロック)', unlockHarmony: '手動調整 (アンロック)',
   },
 };
 
@@ -488,6 +496,44 @@ const Renderer = {
 
     return html;
   },
+
+  /** Render markdown with interactive editable KaTeX math boxes */
+  renderLive(md) {
+    this.init();
+    if (!md) return '';
+
+    const mathChips = [];
+    let src = md;
+
+    // Display math: $$...$$ or \[...\]
+    src = src.replace(/\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]/g, (_, a, b) => {
+      mathChips.push({ display: true, tex: (a || b).trim() });
+      return `%%MATHCHIP_${mathChips.length - 1}%%`;
+    });
+    // Inline math: $...$ or \(...\)
+    src = src.replace(/\$([^\$\n]+?)\$|\\\((.+?)\\\)/g, (_, a, b) => {
+      mathChips.push({ display: false, tex: (a || b).trim() });
+      return `%%MATHCHIP_${mathChips.length - 1}%%`;
+    });
+
+    let html = window.marked.parse(src);
+
+    html = html.replace(/%%MATHCHIP_(\d+)%%/g, (_, i) => {
+      const { display, tex } = mathChips[+i];
+      let rendered = '';
+      try {
+        rendered = window.katex ? window.katex.renderToString(tex, { displayMode: display, throwOnError: false }) : tex;
+      } catch {
+        rendered = tex;
+      }
+      const delim = display ? '$$' : '$';
+      const blockClass = display ? ' block' : '';
+      const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<span class="math-live-box${blockClass}" data-tex="${esc(tex)}" data-display="${display}" tabindex="0" title="${I18n.t('mathClickHint')}"><span class="math-rendered">${rendered}</span><span class="math-editor hidden"><span class="math-delim">${delim}</span><input type="text" class="math-raw-input" value="${esc(tex)}" spellcheck="false"><span class="math-delim">${delim}</span></span></span>`;
+    });
+
+    return html;
+  },
 };
 
 
@@ -528,9 +574,9 @@ const Editor = {
     this.currentNoteId = noteId;
     this.el.title.value = note.title;
     this.el.editor.value = note.content;
-    if (window.LiveEditor) LiveEditor.load(note.content);
     this.updateCharCount();
     this.updatePreview();
+    this.updateLiveEditor();
     this.showEditor(true);
 
     // Mark active in sidebar
@@ -550,29 +596,124 @@ const Editor = {
     document.querySelectorAll('.view-toggle-btn').forEach(btn =>
       btn.classList.toggle('active', btn.dataset.view === mode));
 
-    if (mode === 'live') {
-      this.el.editorPane?.classList.remove('hidden');
-      this.el.liveEditor?.classList.remove('hidden');
-      this.el.editor?.classList.add('hidden');
-      this.el.previewPane?.classList.add('hidden');
-      this.el.resizeHandle?.classList.add('hidden');
-    } else if (mode === 'edit') {
-      this.el.editorPane?.classList.remove('hidden');
-      this.el.liveEditor?.classList.add('hidden');
-      this.el.editor?.classList.remove('hidden');
-      this.el.previewPane?.classList.add('hidden');
-      this.el.resizeHandle?.classList.add('hidden');
-    } else if (mode === 'split') {
-      this.el.editorPane?.classList.remove('hidden');
-      this.el.previewPane?.classList.remove('hidden');
-      this.el.resizeHandle?.classList.remove('hidden');
-      this.updatePreview();
-    } else if (mode === 'preview') {
-      this.el.editorPane?.classList.add('hidden');
-      this.el.previewPane?.classList.remove('hidden');
-      this.el.resizeHandle?.classList.add('hidden');
+    const isLive = mode === 'live';
+    const isEdit = mode === 'edit';
+    const isSplit = mode === 'split';
+    const isPreview = mode === 'preview';
+
+    this.el.editorPane?.classList.toggle('hidden', isPreview);
+    this.el.previewPane?.classList.toggle('hidden', isLive || isEdit);
+    this.el.resizeHandle?.classList.toggle('hidden', !isSplit);
+
+    this.el.liveEditor?.classList.toggle('hidden', !isLive);
+    this.el.editor?.classList.toggle('hidden', isLive);
+
+    if (isLive) {
+      this.updateLiveEditor();
+    } else if (isSplit || isPreview) {
       this.updatePreview();
     }
+  },
+
+  updateLiveEditor() {
+    if (!this.el.liveEditor || !this.el.editor) return;
+    this.el.liveEditor.innerHTML = Renderer.renderLive(this.el.editor.value);
+    this.bindLiveMathBoxes();
+  },
+
+  bindLiveMathBoxes() {
+    if (!this.el.liveEditor) return;
+    const boxes = this.el.liveEditor.querySelectorAll('.math-live-box');
+
+    boxes.forEach(box => {
+      const rendered = box.querySelector('.math-rendered');
+      const editor = box.querySelector('.math-editor');
+      const input = box.querySelector('.math-raw-input');
+      const isDisplay = box.dataset.display === 'true';
+
+      const openEditor = () => {
+        rendered?.classList.add('hidden');
+        editor?.classList.remove('hidden');
+        box.classList.add('editing');
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      };
+
+      const closeEditor = () => {
+        if (!input) return;
+        const newTex = input.value.trim();
+        box.classList.remove('editing');
+        editor?.classList.add('hidden');
+
+        if (!newTex) {
+          box.remove();
+        } else {
+          box.dataset.tex = newTex;
+          try {
+            if (rendered) {
+              rendered.innerHTML = window.katex ? window.katex.renderToString(newTex, { displayMode: isDisplay, throwOnError: false }) : newTex;
+            }
+          } catch {
+            if (rendered) rendered.textContent = newTex;
+          }
+          rendered?.classList.remove('hidden');
+        }
+
+        Editor.syncFromLive();
+      };
+
+      // Click to edit
+      rendered?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditor();
+      });
+
+      // Backspace or Enter when focused on box
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' || e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          openEditor();
+        }
+      });
+
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            closeEditor();
+          } else if (e.key === 'Backspace' && input.value === '') {
+            e.preventDefault();
+            e.stopPropagation();
+            box.remove();
+            Editor.syncFromLive();
+          }
+        });
+
+        input.addEventListener('blur', () => {
+          closeEditor();
+        });
+      }
+    });
+  },
+
+  syncFromLive() {
+    if (!this.el.liveEditor || !this.el.editor) return;
+    const clone = this.el.liveEditor.cloneNode(true);
+    clone.querySelectorAll('.math-live-box').forEach(box => {
+      const tex = box.dataset.tex;
+      const isDisplay = box.dataset.display === 'true';
+      const delim = isDisplay ? '$$' : '$';
+      box.replaceWith(document.createTextNode(` ${delim}${tex}${delim} `));
+    });
+
+    const newContent = clone.innerText || clone.textContent || '';
+    this.el.editor.value = newContent;
+    this.updateCharCount();
+    this.scheduleSave();
   },
 
   updatePreview() {
@@ -728,275 +869,6 @@ const Editor = {
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     });
-  },
-};
-
-
-/* ═══════════════════════════════════════════════════════════════════
-   §4b LIVE EDITOR — Typora-style inline real-time LaTeX & Markdown
-   ═══════════════════════════════════════════════════════════════════ */
-
-const LiveEditor = {
-  el: null,
-  isComposing: false,
-  _checkTimer: null,
-
-  init() {
-    this.el = document.getElementById('live-editor');
-    if (!this.el) return;
-
-    this.el.addEventListener('compositionstart', () => { this.isComposing = true; });
-    this.el.addEventListener('compositionend', () => {
-      this.isComposing = false;
-      this.checkAndRenderMath();
-      this.syncToTextarea();
-    });
-
-    this.el.addEventListener('input', (e) => {
-      if (this.isComposing) return;
-      this.onInput(e);
-    });
-
-    this.el.addEventListener('keydown', (e) => this.onKeyDown(e));
-  },
-
-  load(rawContent) {
-    if (!this.el) this.el = document.getElementById('live-editor');
-    if (!this.el) return;
-    this.el.innerHTML = '';
-    if (!rawContent) return;
-
-    const frag = this._parseToDOM(rawContent);
-    this.el.appendChild(frag);
-  },
-
-  _parseToDOM(text) {
-    const frag = document.createDocumentFragment();
-    const lines = text.split('\n');
-
-    lines.forEach((line) => {
-      const lineDiv = document.createElement('div');
-      lineDiv.className = 'live-line';
-
-      if (!line) {
-        lineDiv.innerHTML = '<br>';
-        frag.appendChild(lineDiv);
-        return;
-      }
-
-      // Check block math: $$...$$
-      const blockMathMatch = line.trim().match(/^\$\$([\s\S]+?)\$\$$/);
-      if (blockMathMatch) {
-        const box = this._createMathBox(line.trim(), blockMathMatch[1], true);
-        lineDiv.appendChild(box);
-        frag.appendChild(lineDiv);
-        return;
-      }
-
-      // Parse inline math $...$
-      let cur = 0;
-      const regex = /\$([^\$\n]+?)\$/g;
-      let match;
-      while ((match = regex.exec(line)) !== null) {
-        if (match.index > cur) {
-          lineDiv.appendChild(document.createTextNode(line.substring(cur, match.index)));
-        }
-        const raw = match[0];
-        const tex = match[1];
-        const box = this._createMathBox(raw, tex, false);
-        lineDiv.appendChild(box);
-        cur = regex.lastIndex;
-      }
-      if (cur < line.length) {
-        lineDiv.appendChild(document.createTextNode(line.substring(cur)));
-      }
-
-      frag.appendChild(lineDiv);
-    });
-
-    return frag;
-  },
-
-  _createMathBox(raw, tex, isBlock) {
-    const box = document.createElement(isBlock ? 'div' : 'span');
-    box.className = `aria-math-box ${isBlock ? 'math-block-box' : 'math-inline-box'}`;
-    box.contentEditable = 'false';
-    box.dataset.raw = raw;
-    box.tabIndex = 0;
-
-    try {
-      if (window.katex) {
-        box.innerHTML = window.katex.renderToString(tex.trim(), {
-          displayMode: isBlock,
-          throwOnError: false,
-        });
-      } else {
-        box.textContent = raw;
-      }
-    } catch {
-      box.textContent = raw;
-    }
-
-    // Click on box immediately unfolds to raw code for editing
-    box.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.unfoldBox(box, true);
-    });
-
-    return box;
-  },
-
-  unfoldBox(box, placeCaretInside) {
-    const raw = box.dataset.raw;
-    const textNode = document.createTextNode(raw);
-    const parent = box.parentNode;
-    if (!parent) return;
-
-    parent.replaceChild(textNode, box);
-
-    // Place caret inside or at end of text node
-    const sel = window.getSelection();
-    if (sel) {
-      const range = document.createRange();
-      const offset = placeCaretInside && raw.endsWith('$') ? Math.max(1, raw.length - 1) : raw.length;
-      range.setStart(textNode, offset);
-      range.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-    this.syncToTextarea();
-  },
-
-  onKeyDown(e) {
-    // Intercept Backspace on or immediately following a math box
-    if (e.key === 'Backspace') {
-      const sel = window.getSelection();
-      if (!sel || !sel.rangeCount) return;
-      const range = sel.getRangeAt(0);
-
-      let targetBox = null;
-
-      if (range.collapsed) {
-        const container = range.startContainer;
-        const offset = range.startOffset;
-
-        if (container.nodeType === Node.ELEMENT_NODE) {
-          const prevChild = container.childNodes[offset - 1];
-          if (prevChild && prevChild.classList && prevChild.classList.contains('aria-math-box')) {
-            targetBox = prevChild;
-          }
-        } else if (container.nodeType === Node.TEXT_NODE && offset === 0) {
-          let prev = container.previousSibling;
-          while (prev && prev.nodeType === Node.TEXT_NODE && prev.textContent === '') {
-            prev = prev.previousSibling;
-          }
-          if (prev && prev.classList && prev.classList.contains('aria-math-box')) {
-            targetBox = prev;
-          }
-        }
-      }
-
-      if (!targetBox && document.activeElement && document.activeElement.classList.contains('aria-math-box')) {
-        targetBox = document.activeElement;
-      }
-
-      if (targetBox) {
-        e.preventDefault();
-        this.unfoldBox(targetBox, false);
-        return;
-      }
-    }
-  },
-
-  onInput(e) {
-    clearTimeout(this._checkTimer);
-    this._checkTimer = setTimeout(() => {
-      this.checkAndRenderMath();
-    }, 250);
-
-    this.syncToTextarea();
-  },
-
-  checkAndRenderMath() {
-    const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return;
-    const range = sel.getRangeAt(0);
-    const container = range.startContainer;
-
-    if (container.nodeType === Node.TEXT_NODE) {
-      const text = container.textContent;
-      const regex = /\$([^\$\n]+?)\$/g;
-      let match;
-      if ((match = regex.exec(text)) !== null) {
-        const matchEnd = match.index + match[0].length;
-        if (range.startOffset >= matchEnd) {
-          const raw = match[0];
-          const tex = match[1];
-          const box = this._createMathBox(raw, tex, false);
-
-          const beforeText = text.substring(0, match.index);
-          const afterText = text.substring(matchEnd);
-
-          const parent = container.parentNode;
-          if (parent) {
-            const frag = document.createDocumentFragment();
-            if (beforeText) frag.appendChild(document.createTextNode(beforeText));
-            frag.appendChild(box);
-            const afterNode = document.createTextNode(afterText || ' ');
-            frag.appendChild(afterNode);
-
-            parent.replaceChild(frag, container);
-
-            const newRange = document.createRange();
-            newRange.setStart(afterNode, afterText ? 0 : 1);
-            newRange.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(newRange);
-
-            this.syncToTextarea();
-          }
-        }
-      }
-    }
-  },
-
-  extractText() {
-    if (!this.el) return '';
-    const lines = [];
-
-    const processNode = (node) => {
-      if (node.nodeType === Node.TEXT_NODE) return node.textContent;
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        if (node.classList.contains('aria-math-box')) return node.dataset.raw || '';
-        if (node.tagName === 'BR') return '\n';
-        let out = '';
-        for (const child of node.childNodes) out += processNode(child);
-        return out;
-      }
-      return '';
-    };
-
-    const lineElements = this.el.querySelectorAll('.live-line');
-    if (lineElements.length > 0) {
-      lineElements.forEach(lineEl => {
-        lines.push(processNode(lineEl));
-      });
-      return lines.join('\n');
-    }
-
-    for (const child of this.el.childNodes) {
-      lines.push(processNode(child));
-    }
-    return lines.join('\n');
-  },
-
-  syncToTextarea() {
-    const raw = this.extractText();
-    const ta = document.getElementById('editor');
-    if (ta && ta.value !== raw) {
-      ta.value = raw;
-      Editor.onInput();
-    }
   },
 };
 
@@ -1343,51 +1215,45 @@ const ContextMenu = {
 
 const Appearance = {
   applyTheme(theme) {
-    // Legacy compatibility — now handled entirely by ColorEngine + data-dark
-    // Keep for settings persistence
-    Store.saveSettings({ theme: theme || 'light' });
+    let resolved = theme || 'paper';
+    if (resolved === 'light') resolved = 'paper';
+    if (resolved === 'dark') resolved = 'dusk';
+
+    document.documentElement.dataset.theme = resolved;
+
+    const isDark = resolved === 'dusk' || resolved === 'midnight' || document.documentElement.dataset.theme === 'dark';
+    const lightSheet = document.getElementById('hljs-light');
+    const darkSheet = document.getElementById('hljs-dark');
+    if (lightSheet) lightSheet.disabled = isDark;
+    if (darkSheet) darkSheet.disabled = !isDark;
+
+    Store.saveSettings({ theme: resolved });
   },
 
   toggleTheme() {
-    const isDark = document.documentElement.hasAttribute('data-dark');
-    if (isDark) document.documentElement.removeAttribute('data-dark');
-    else document.documentElement.setAttribute('data-dark', '');
-    Store.saveSettings({ darkMode: !isDark });
-    const s = Store.getSettings();
-    ColorEngine.applyAccent(s.accentR ?? 124, s.accentG ?? 152, s.accentB ?? 133);
-    ColorEngine.renderPresets();
-    const lightSheet = document.getElementById('hljs-light');
-    const darkSheet  = document.getElementById('hljs-dark');
-    const nowDark = document.documentElement.hasAttribute('data-dark');
-    if (lightSheet) lightSheet.disabled = nowDark;
-    if (darkSheet)  darkSheet.disabled  = !nowDark;
+    const isDark = document.documentElement.dataset.theme === 'dark' || document.documentElement.dataset.theme === 'dusk' || document.documentElement.dataset.theme === 'midnight';
+    ColorEngine.setDarkMode(!isDark);
   },
 
-  applyFont(font, customFamily) {
-    if (font === 'custom' || customFamily) {
-      const family = customFamily || Store.getSettings().customFont;
-      if (family) {
-        document.documentElement.style.setProperty('--font-custom', family);
-        document.documentElement.dataset.font = 'custom';
-        Store.saveSettings({ font: 'custom', customFont: family });
-        const label = document.getElementById('current-font-label');
-        if (label) label.textContent = family.split(',')[0].replace(/['"]/g, '').trim();
-        document.querySelectorAll('.font-option').forEach(opt => opt.classList.remove('active'));
-        const input = document.getElementById('custom-font-input');
-        if (input) input.value = family;
-        return;
-      }
-    }
+  applyFont(font, customFamily = '') {
     document.documentElement.dataset.font = font;
-    Store.saveSettings({ font });
+    if (font === 'custom') {
+      const family = customFamily || Store.getSettings().customFontFamily || 'system-ui';
+      document.documentElement.style.setProperty('--font-custom', `"${family}", var(--font-sans)`);
+      Store.saveSettings({ font, customFontFamily: family });
+    } else {
+      Store.saveSettings({ font });
+    }
     const label = document.getElementById('current-font-label');
     if (label) {
-      const names = { sans: 'Sans', serif: 'Serif', mono: 'Mono', literary: 'Literary' };
+      const names = { sans: 'Sans', serif: 'Serif', mono: 'Mono', literary: 'Literary', custom: 'Custom' };
       label.textContent = names[font] || font;
     }
-    // Update selector active state
     document.querySelectorAll('.font-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.font === font));
+
+    const customWrapper = document.getElementById('custom-font-wrapper');
+    if (customWrapper) customWrapper.style.display = font === 'custom' ? 'block' : 'none';
   },
 
   applyFontSize(size) {
@@ -1418,7 +1284,6 @@ const Appearance = {
     I18n.setLanguage(next);
     const label = document.getElementById('current-lang-label');
     if (label) label.textContent = next.toUpperCase();
-    // Update selector active state
     document.querySelectorAll('.lang-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.lang === next));
   },
@@ -1426,226 +1291,238 @@ const Appearance = {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   §9c COLOR ENGINE — HSL-based dynamic accent palette
+   §9a COLOR ENGINE — Auto-Harmonized & Unlocked RGB System
    ═══════════════════════════════════════════════════════════════════ */
 
 const ColorEngine = {
+  KEY: 'aria_color_custom',
+
   PRESETS: [
-    { h: 142, s: 22, label: 'Sage'     },
-    { h: 210, s: 25, label: 'Slate'    },
-    { h: 25,  s: 35, label: 'Amber'    },
-    { h: 270, s: 20, label: 'Lavender' },
-    { h: 350, s: 25, label: 'Rose'     },
-    { h: 180, s: 20, label: 'Teal'     },
+    { name: 'Sage', hex: '#5B8266' },
+    { name: 'Slate', hex: '#4E738C' },
+    { name: 'Indigo', hex: '#56648A' },
+    { name: 'Amber', hex: '#8E6B47' },
+    { name: 'Rose', hex: '#8F5E68' },
+    { name: 'Monochrome', hex: '#555555' }
   ],
 
-  // ── HSL ↔ RGB helpers ────────────────────────────────────────────
-  _hslToRgb(h, s, l) {
-    s /= 100; l /= 100;
-    const k = n => (n + h / 30) % 12;
-    const a = s * Math.min(l, 1 - l);
-    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-    return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
+  getCustom() {
+    try {
+      const def = { isLocked: true, primaryHex: '#7C9885', isDark: false };
+      return { ...def, ...JSON.parse(localStorage.getItem(this.KEY) || '{}') };
+    } catch {
+      return { isLocked: true, primaryHex: '#7C9885', isDark: false };
+    }
   },
 
-  _rgbToHsl(r, g, b) {
+  saveCustom(data) {
+    const cur = this.getCustom();
+    const updated = { ...cur, ...data };
+    localStorage.setItem(this.KEY, JSON.stringify(updated));
+    return updated;
+  },
+
+  hex2rgb(hex) {
+    hex = (hex || '').replace(/^#/, '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const num = parseInt(hex, 16) || 0;
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  },
+
+  rgb2hex(r, g, b) {
+    return '#' + [r, g, b].map(x => {
+      const h = Math.max(0, Math.min(255, Math.round(x))).toString(16);
+      return h.length === 1 ? '0' + h : h;
+    }).join('').toUpperCase();
+  },
+
+  rgb2hsl(r, g, b) {
     r /= 255; g /= 255; b /= 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
     let h, s, l = (max + min) / 2;
-    if (max === min) { h = s = 0; }
-    else {
+    if (max === min) {
+      h = s = 0;
+    } else {
       const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
       switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
       }
+      h /= 6;
     }
-    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
   },
 
-  _rgbToHex(r, g, b) {
-    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+  hsl2rgb(h, s, l) {
+    h /= 360; s /= 100; l /= 100;
+    let r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
   },
 
-  _hexToRgb(hex) {
-    const h = hex.replace('#', '');
-    return [parseInt(h.slice(0,2), 16), parseInt(h.slice(2,4), 16), parseInt(h.slice(4,6), 16)];
+  hsl2hex(h, s, l) {
+    const { r, g, b } = this.hsl2rgb(h, s, l);
+    return this.rgb2hex(r, g, b);
   },
 
-  // ── Palette generation ───────────────────────────────────────────
-  generatePalette(h, s, isDark) {
-    // Accent: vivid saturated color
-    const accentL  = isDark ? 65 : 42;
-    const accentS  = Math.min(s * 2.8, 72);
-    // Hover: slightly darker/lighter
-    const hoverL   = isDark ? accentL - 8 : accentL - 7;
-    // Muted: very desaturated, used for highlights
-    const mutedL   = isDark ? 22 : 93;
-    const mutedS   = Math.max(s * 0.6, 8);
-    // Surface and bg: neutral with tiny hue tint
-    const bgL      = isDark ? 10  : 98;
-    const bgS      = Math.min(s * 0.25, 6);
-    const surfL    = isDark ? 15  : 100;
-    const surfS    = Math.min(s * 0.2, 5);
-    const surf2L   = isDark ? 20  : 96;
-    const surf2S   = Math.min(s * 0.3, 7);
-    const borderL  = isDark ? 28  : 88;
-    const borderS  = Math.min(s * 0.3, 6);
-    const textL    = isDark ? 90  : 12;
-    const textS    = Math.min(s * 0.1, 4);
-    const mutedTL  = isDark ? 55  : 48;
-    const mutedTS  = Math.min(s * 0.5, 20);
+  harmonize(primaryHex, isDark = false) {
+    const { r, g, b } = this.hex2rgb(primaryHex);
+    const { h, s, l } = this.rgb2hsl(r, g, b);
 
-    const css = (hl, sl, ll) => `hsl(${hl}, ${sl}%, ${ll}%)`;
-    return {
-      '--accent':         css(h, accentS, accentL),
-      '--accent-hover':   css(h, accentS, hoverL),
-      '--accent-muted':   css(h, mutedS, mutedL),
-      '--accent-text':    css(h, Math.min(accentS, 60), isDark ? 72 : 36),
-      '--bg':             css(h, bgS,    bgL),
-      '--surface':        css(h, surfS,  surfL),
-      '--surface-2':      css(h, surf2S, surf2L),
-      '--border':         css(h, borderS, borderL),
-      '--text':           css(h, textS,  textL),
-      '--text-muted':     css(h, mutedTS, mutedTL),
-      '--selection-bg':   css(h, Math.min(accentS * 0.6, 35), isDark ? 30 : 88),
-    };
+    if (!isDark) {
+      return {
+        accent: this.hsl2hex(h, Math.max(30, Math.min(s, 65)), Math.max(35, Math.min(l, 46))),
+        accentHover: this.hsl2hex(h, Math.max(30, Math.min(s, 65)), Math.max(28, Math.min(l - 8, 38))),
+        accentLight: this.hsl2hex(h, Math.min(s * 0.4, 25), 94),
+        bg: this.hsl2hex(h, Math.min(s * 0.15, 8), 98),
+        bgSecondary: this.hsl2hex(h, Math.min(s * 0.2, 12), 95),
+        surface: '#FFFFFF',
+        border: this.hsl2hex(h, Math.min(s * 0.25, 14), 90),
+        borderLight: this.hsl2hex(h, Math.min(s * 0.2, 10), 94),
+        text: this.hsl2hex(h, Math.min(s * 0.3, 15), 11),
+        textSecondary: this.hsl2hex(h, Math.min(s * 0.2, 10), 42),
+        textTertiary: this.hsl2hex(h, Math.min(s * 0.15, 8), 62),
+        selectionBg: this.hsl2hex(h, Math.min(s * 0.6, 45), 88),
+        codeBg: this.hsl2hex(h, Math.min(s * 0.2, 10), 96),
+        shadowColor: 'rgba(0,0,0,0.05)'
+      };
+    } else {
+      return {
+        accent: this.hsl2hex(h, Math.max(40, Math.min(s, 70)), Math.max(62, Math.min(l, 74))),
+        accentHover: this.hsl2hex(h, Math.max(40, Math.min(s, 70)), Math.min(82, l + 8)),
+        accentLight: this.hsl2hex(h, Math.min(s * 0.4, 30), 18),
+        bg: this.hsl2hex(h, Math.min(s * 0.2, 12), 10),
+        bgSecondary: this.hsl2hex(h, Math.min(s * 0.25, 15), 14),
+        surface: this.hsl2hex(h, Math.min(s * 0.2, 12), 17),
+        border: this.hsl2hex(h, Math.min(s * 0.25, 18), 24),
+        borderLight: this.hsl2hex(h, Math.min(s * 0.2, 14), 19),
+        text: this.hsl2hex(h, Math.min(s * 0.15, 8), 92),
+        textSecondary: this.hsl2hex(h, Math.min(s * 0.15, 8), 64),
+        textTertiary: this.hsl2hex(h, Math.min(s * 0.1, 5), 45),
+        selectionBg: this.hsl2hex(h, Math.min(s * 0.5, 35), 22),
+        codeBg: this.hsl2hex(h, Math.min(s * 0.2, 10), 14),
+        shadowColor: 'rgba(0,0,0,0.35)'
+      };
+    }
   },
 
-  // ── Main apply method ────────────────────────────────────────────
-  applyAccent(r, g, b) {
-    const root = document.documentElement;
-    const isDark = root.hasAttribute('data-dark');
-    const [h, s] = this._rgbToHsl(r, g, b);
-    const palette = this.generatePalette(h, s, isDark);
+  apply() {
+    const cfg = this.getCustom();
+    document.documentElement.dataset.theme = cfg.isDark ? 'dark' : 'light';
 
-    Object.entries(palette).forEach(([k, v]) => root.style.setProperty(k, v));
-    Store.saveSettings({ accentR: r, accentG: g, accentB: b });
-    this.syncSliders(h, s, r, g, b);
+    const lightSheet = document.getElementById('hljs-light');
+    const darkSheet = document.getElementById('hljs-dark');
+    if (lightSheet) lightSheet.disabled = cfg.isDark;
+    if (darkSheet) darkSheet.disabled = !cfg.isDark;
+
+    if (cfg.isLocked) {
+      const palette = this.harmonize(cfg.primaryHex, cfg.isDark);
+      const root = document.documentElement;
+      Object.entries(palette).forEach(([k, val]) => {
+        const cssVar = '--' + k.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+        root.style.setProperty(cssVar, val);
+      });
+    } else if (cfg.unlockedColors) {
+      const root = document.documentElement;
+      root.style.setProperty('--accent', cfg.unlockedColors.accent || '#7C9885');
+      root.style.setProperty('--bg', cfg.unlockedColors.bg || '#FAFAF9');
+      root.style.setProperty('--surface', cfg.unlockedColors.surface || '#FFFFFF');
+      root.style.setProperty('--text', cfg.unlockedColors.text || '#1A1A1A');
+    }
   },
 
-  applyFromHSL(h, s) {
-    const isDark = document.documentElement.hasAttribute('data-dark');
-    const l = isDark ? 55 : 42;
-    const [r, g, b] = this._hslToRgb(h, s * 2.5, l);
-    this.applyAccent(r, g, b);
+  setPrimary(hex) {
+    this.saveCustom({ primaryHex: hex });
+    this.apply();
+    this.renderSettingsUI();
   },
 
-  // ── Sync UI sliders ──────────────────────────────────────────────
-  syncSliders(h, s, r, g, b) {
-    const hSlider = document.getElementById('hue-slider');
-    const sSlider = document.getElementById('sat-slider');
+  setDarkMode(isDark) {
+    this.saveCustom({ isDark });
+    this.apply();
+    this.renderSettingsUI();
+  },
+
+  toggleLock() {
+    const cfg = this.getCustom();
+    const isLocked = !cfg.isLocked;
+    this.saveCustom({ isLocked });
+    this.apply();
+    this.renderSettingsUI();
+    Toast.show(isLocked ? I18n.t('lockHarmony') : I18n.t('unlockHarmony'), 'info', 1800);
+  },
+
+  renderSettingsUI() {
+    const cfg = this.getCustom();
+    const darkToggle = document.getElementById('dark-mode-toggle');
+    if (darkToggle) darkToggle.checked = cfg.isDark;
+
+    const rgb = this.hex2rgb(cfg.primaryHex);
+    const hsl = this.rgb2hsl(rgb.r, rgb.g, rgb.b);
+
+    const hueSlider = document.getElementById('hue-slider');
+    const satSlider = document.getElementById('sat-slider');
+    const previewDot = document.getElementById('color-preview-dot');
+
+    if (hueSlider) hueSlider.value = hsl.h;
+    if (satSlider) satSlider.value = hsl.s;
+    if (previewDot) previewDot.style.backgroundColor = cfg.primaryHex;
+
+    const btnLock = document.getElementById('btn-unlock-rgb');
+    const advPanel = document.getElementById('color-advanced');
+
+    if (btnLock) {
+      btnLock.textContent = cfg.isLocked ? I18n.t('unlockHarmony') : I18n.t('lockHarmony');
+    }
+    if (advPanel) {
+      advPanel.classList.toggle('active', !cfg.isLocked);
+    }
+
+    // Presets
+    const presetBox = document.getElementById('preset-swatches');
+    if (presetBox && presetBox.children.length === 0) {
+      presetBox.innerHTML = '';
+      this.PRESETS.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'preset-swatch';
+        btn.title = p.name;
+        btn.style.backgroundColor = p.hex;
+        btn.addEventListener('click', () => {
+          ColorEngine.setPrimary(p.hex);
+        });
+        presetBox.appendChild(btn);
+      });
+    }
+
+    // Sliders
     const rSlider = document.getElementById('rgb-r');
     const gSlider = document.getElementById('rgb-g');
     const bSlider = document.getElementById('rgb-b');
     const hexInput = document.getElementById('color-hex');
-    const previewDot = document.getElementById('color-preview-dot');
 
-    if (hSlider) hSlider.value = h;
-    if (sSlider) sSlider.value = Math.min(90, Math.max(10, s));
-    if (rSlider) rSlider.value = r;
-    if (gSlider) gSlider.value = g;
-    if (bSlider) bSlider.value = b;
-    if (hexInput) hexInput.value = this._rgbToHex(r, g, b);
-    if (previewDot) previewDot.style.background = this._rgbToHex(r, g, b);
-  },
-
-  // ── Render preset swatches ───────────────────────────────────────
-  renderPresets() {
-    const container = document.getElementById('preset-swatches');
-    if (!container) return;
-    container.innerHTML = '';
-    this.PRESETS.forEach(preset => {
-      const isDark = document.documentElement.hasAttribute('data-dark');
-      const [r, g, b] = this._hslToRgb(preset.h, preset.s * 2.5, isDark ? 55 : 42);
-      const btn = document.createElement('button');
-      btn.className = 'preset-swatch';
-      btn.title = preset.label;
-      btn.style.background = this._rgbToHex(r, g, b);
-      btn.addEventListener('click', () => this.applyFromHSL(preset.h, preset.s));
-      container.appendChild(btn);
-    });
-  },
-
-  // ── Init & events ────────────────────────────────────────────────
-  init() {
-    const s = Store.getSettings();
-    const isDark = s.darkMode || false;
-    if (isDark) document.documentElement.setAttribute('data-dark', '');
-    else document.documentElement.removeAttribute('data-dark');
-
-    // Dark mode toggle sync
-    const toggle = document.getElementById('dark-mode-toggle');
-    if (toggle) toggle.checked = isDark;
-
-    this.applyAccent(s.accentR ?? 124, s.accentG ?? 152, s.accentB ?? 133);
-    this.renderPresets();
-    this._bindEvents();
-  },
-
-  _bindEvents() {
-    document.getElementById('hue-slider')?.addEventListener('input', e => {
-      const h = +e.target.value;
-      const sSlider = document.getElementById('sat-slider');
-      const s = sSlider ? +sSlider.value : 22;
-      this.applyFromHSL(h, s);
-    });
-
-    document.getElementById('sat-slider')?.addEventListener('input', e => {
-      const s = +e.target.value;
-      const hSlider = document.getElementById('hue-slider');
-      const h = hSlider ? +hSlider.value : 142;
-      this.applyFromHSL(h, s);
-    });
-
-    document.getElementById('dark-mode-toggle')?.addEventListener('change', e => {
-      const isDark = e.target.checked;
-      if (isDark) document.documentElement.setAttribute('data-dark', '');
-      else document.documentElement.removeAttribute('data-dark');
-      Store.saveSettings({ darkMode: isDark });
-      // Re-apply accent with new dark state
-      const sv = Store.getSettings();
-      this.applyAccent(sv.accentR ?? 124, sv.accentG ?? 152, sv.accentB ?? 133);
-      this.renderPresets();
-      // Sync hljs stylesheets
-      const lightSheet = document.getElementById('hljs-light');
-      const darkSheet = document.getElementById('hljs-dark');
-      if (lightSheet) lightSheet.disabled = isDark;
-      if (darkSheet) darkSheet.disabled = !isDark;
-    });
-
-    document.getElementById('btn-unlock-rgb')?.addEventListener('click', () => {
-      document.getElementById('color-advanced')?.classList.toggle('open');
-    });
-
-    document.getElementById('btn-reset-color')?.addEventListener('click', () => {
-      this.applyAccent(124, 152, 133);
-      const hSlider = document.getElementById('hue-slider');
-      const sSlider = document.getElementById('sat-slider');
-      if (hSlider) hSlider.value = 142;
-      if (sSlider) sSlider.value = 22;
-    });
-
-    ['rgb-r', 'rgb-g', 'rgb-b'].forEach(id => {
-      document.getElementById(id)?.addEventListener('input', () => {
-        const r = +(document.getElementById('rgb-r')?.value || 124);
-        const g = +(document.getElementById('rgb-g')?.value || 152);
-        const b = +(document.getElementById('rgb-b')?.value || 133);
-        this.applyAccent(r, g, b);
-        const hexInput = document.getElementById('color-hex');
-        if (hexInput) hexInput.value = this._rgbToHex(r, g, b);
-      });
-    });
-
-    document.getElementById('color-hex')?.addEventListener('change', e => {
-      const hex = e.target.value.replace('#', '');
-      if (!/^[0-9a-fA-F]{6}$/.test(hex)) return;
-      const [r, g, b] = this._hexToRgb(hex);
-      this.applyAccent(r, g, b);
-    });
-  },
+    if (rSlider) rSlider.value = rgb.r;
+    if (gSlider) gSlider.value = rgb.g;
+    if (bSlider) bSlider.value = rgb.b;
+    if (hexInput) hexInput.value = cfg.primaryHex.replace(/^#/, '');
+  }
 };
 
 
@@ -1868,96 +1745,120 @@ img{max-width:100%}blockquote{border-left:3px solid #ddd;margin-left:0;padding-l
     App.renderAll();
     Toast.show('Data cleared', 'success');
   },
+};
 
-  // ── Encrypted export / import (AES-GCM + PBKDF2) ────────────────
-  async exportEncrypted() {
-    const password = prompt(I18n.t('encryptPrompt') || 'Encryption password:');
-    if (!password) return;
-    const data = JSON.stringify({
-      notes: Store.getNotes(), folders: Store.getFolders(),
-      countdowns: Store.getCountdowns(), exportedAt: new Date().toISOString(),
-    });
+
+/* ═══════════════════════════════════════════════════════════════════
+   §10b CRYPTO BACKUP — AES-256-GCM Zero-Knowledge Encryption
+   ═══════════════════════════════════════════════════════════════════ */
+
+const CryptoBackup = {
+  _str2ab(str) { return new TextEncoder().encode(str); },
+  _ab2b64(buf) {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  },
+  _b642ab(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  },
+
+  async deriveKey(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  },
+
+  async exportEncrypted(password) {
+    const payload = {
+      version: 1,
+      appName: 'aria.',
+      notes: Store.getNotes(),
+      folders: Store.getFolders(),
+      countdowns: Store.getCountdowns(),
+      streak: Streak.getData(),
+      settings: Store.getSettings(),
+      colorCustom: ColorEngine.getCustom(),
+      exportedAt: new Date().toISOString()
+    };
+
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await this.deriveKey(password, salt);
+    const jsonStr = JSON.stringify(payload);
+    const encryptedBuf = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      this._str2ab(jsonStr)
+    );
+
+    const backupObj = {
+      version: 1,
+      type: 'aria-encrypted-backup',
+      salt: this._ab2b64(salt),
+      iv: this._ab2b64(iv),
+      ciphertext: this._ab2b64(encryptedBuf),
+      exportedAt: new Date().toISOString()
+    };
+
+    const ymd = new Date().toISOString().slice(0, 10);
+    IO._download(`aria_encrypted_backup_${ymd}.aria`, JSON.stringify(backupObj, null, 2), 'application/json');
+    Toast.show(I18n.t('backupExportSuccess'), 'success');
+  },
+
+  async importEncrypted(fileContent, password) {
+    let backupObj;
     try {
-      const enc = new TextEncoder();
-      const keyMat = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-      const salt   = crypto.getRandomValues(new Uint8Array(16));
-      const iv     = crypto.getRandomValues(new Uint8Array(12));
-      const key    = await crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
-        keyMat, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
-      );
-      const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(data));
-      // Layout: 4-byte magic | 1-byte version | 16-byte salt | 12-byte iv | ciphertext
-      const magic   = new Uint8Array([0x61, 0x72, 0x69, 0x61]); // "aria"
-      const version = new Uint8Array([1]);
-      const payload = new Uint8Array(magic.length + version.length + salt.length + iv.length + encrypted.byteLength);
-      let offset = 0;
-      payload.set(magic, offset);   offset += magic.length;
-      payload.set(version, offset); offset += version.length;
-      payload.set(salt, offset);    offset += salt.length;
-      payload.set(iv, offset);      offset += iv.length;
-      payload.set(new Uint8Array(encrypted), offset);
-      const blob = new Blob([payload], { type: 'application/octet-stream' });
-      const title = `aria-backup-${new Date().toISOString().slice(0,10)}`;
-      this._download(`${title}.aria`, blob, 'application/octet-stream');
-      Toast.show(I18n.t('encryptSuccess') || 'Encrypted backup saved', 'success');
-    } catch (err) {
-      console.error(err);
-      Toast.show(I18n.t('encryptError') || 'Encryption failed', 'error');
+      backupObj = JSON.parse(fileContent);
+    } catch {
+      throw new Error('Invalid JSON');
     }
-  },
 
-  async importEncrypted(file) {
-    const password = prompt(I18n.t('decryptPrompt') || 'Decryption password:');
-    if (!password) return;
+    if (backupObj.type !== 'aria-encrypted-backup') {
+      throw new Error('Invalid backup type');
+    }
+
+    const salt = new Uint8Array(this._b642ab(backupObj.salt));
+    const iv = new Uint8Array(this._b642ab(backupObj.iv));
+    const ciphertext = this._b642ab(backupObj.ciphertext);
+    const key = await this.deriveKey(password, salt);
+
+    let decryptedBuf;
     try {
-      const buf   = await file.arrayBuffer();
-      const bytes = new Uint8Array(buf);
-      // Validate magic header "aria"
-      const magic = bytes.slice(0, 4);
-      if (magic[0] !== 0x61 || magic[1] !== 0x72 || magic[2] !== 0x69 || magic[3] !== 0x61) {
-        Toast.show(I18n.t('decryptInvalid') || 'Invalid .aria file', 'error'); return;
-      }
-      // version byte
-      const offset0 = 5; // 4 magic + 1 version
-      const salt       = bytes.slice(offset0, offset0 + 16);
-      const iv         = bytes.slice(offset0 + 16, offset0 + 28);
-      const ciphertext = bytes.slice(offset0 + 28);
-
-      const enc    = new TextEncoder();
-      const keyMat = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-      const key    = await crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
-        keyMat, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+      decryptedBuf = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        ciphertext
       );
-      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
-      const json = JSON.parse(new TextDecoder().decode(decrypted));
-      this._mergeImport(json);
-      Toast.show(I18n.t('decryptSuccess') || 'Decrypted and imported', 'success');
-    } catch (err) {
-      console.error(err);
-      Toast.show(I18n.t('decryptError') || 'Wrong password or corrupted file', 'error');
+    } catch {
+      throw new Error(I18n.t('wrongPassword'));
     }
-  },
 
-  _mergeImport(data) {
-    if (Array.isArray(data.notes)) {
-      const existing = Store.getNotes();
-      const ids = new Set(existing.map(n => n.id));
-      Store.setNotes([...existing, ...data.notes.filter(n => !ids.has(n.id))]);
-    }
-    if (Array.isArray(data.folders)) {
-      const existing = Store.getFolders();
-      const ids = new Set(existing.map(f => f.id));
-      Store.setFolders([...existing, ...data.folders.filter(f => !ids.has(f.id))]);
-    }
-    if (Array.isArray(data.countdowns)) {
-      const existing = Store.getCountdowns();
-      const ids = new Set(existing.map(c => c.id));
-      Store.setCountdowns([...existing, ...data.countdowns.filter(c => !ids.has(c.id))]);
-    }
-    App.renderAll();
-  },
+    const decStr = new TextDecoder().decode(decryptedBuf);
+    const data = JSON.parse(decStr);
+
+    if (data.notes) Store.setNotes(data.notes);
+    if (data.folders) Store.setFolders(data.folders);
+    if (data.countdowns) Store.setCountdowns(data.countdowns);
+    if (data.streak) Streak.saveData(data.streak);
+    if (data.settings) Store.saveSettings(data.settings);
+    if (data.colorCustom) ColorEngine.saveCustom(data.colorCustom);
+
+    App.init();
+    Toast.show(I18n.t('backupImportSuccess'), 'success');
+  }
 };
 
 
@@ -1976,12 +1877,10 @@ const App = {
     const settings = Store.getSettings();
     I18n.lang = settings.language;
     I18n.apply();
-    Appearance.applyFont(settings.font);
+    ColorEngine.apply();
+    Appearance.applyFont(settings.font, settings.customFontFamily);
     Appearance.applyFontSize(settings.fontSize);
     Appearance.applyEditorWidth(settings.editorWidth);
-
-    // 1b. Apply colour engine (sets dark mode + accent palette)
-    ColorEngine.init();
 
     // Set lang label
     const langLabel = document.getElementById('current-lang-label');
@@ -1994,9 +1893,8 @@ const App = {
     // 3. Bind events
     this.bindEvents();
 
-    // 4. Editor resize, live engine & initial state
+    // 4. Editor resize & initial state
     Editor.initResize();
-    LiveEditor.init();
     Editor.setViewMode('live');
     const notes = Store.getNotes();
     if (notes.length > 0) {
@@ -2137,11 +2035,18 @@ const App = {
     // Active font option
     document.querySelectorAll('.font-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.font === settings.font));
-    const customFontInput = document.getElementById('custom-font-input');
-    if (customFontInput && settings.customFont) customFontInput.value = settings.customFont;
     // Active lang option
     document.querySelectorAll('.lang-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.lang === settings.language));
+
+    // Custom font input
+    if (settings.font === 'custom') {
+      const customInput = document.getElementById('custom-font-input');
+      if (customInput) customInput.value = settings.customFontFamily || '';
+      const customWrapper = document.getElementById('custom-font-wrapper');
+      if (customWrapper) customWrapper.style.display = 'block';
+    }
+    ColorEngine.renderSettingsUI();
   },
 
   // ── Event binding ────────────────────────────────────────────────
@@ -2321,24 +2226,67 @@ const App = {
       else GitHubSync.stopAutoSync();
     });
 
-    // Theme options in settings
-    document.querySelectorAll('.theme-card').forEach(card => {
-      card.addEventListener('click', () => Appearance.applyTheme(card.dataset.theme));
+    // --- Live Editor Input ---
+    Editor.el.liveEditor?.addEventListener('input', () => {
+      Editor.syncFromLive();
+    });
+
+    // Custom Font Input
+    document.getElementById('custom-font-input')?.addEventListener('input', (e) => {
+      Appearance.applyFont('custom', e.target.value.trim());
     });
 
     // Font options in settings
     document.querySelectorAll('.font-option').forEach(opt => {
-      opt.addEventListener('click', () => Appearance.applyFont(opt.dataset.font));
+      opt.addEventListener('click', () => {
+        const font = opt.dataset.font;
+        const customFamily = document.getElementById('custom-font-input')?.value.trim() || '';
+        Appearance.applyFont(font, customFamily);
+      });
     });
 
-    // Custom font apply
-    const applyCustomFont = () => {
-      const val = document.getElementById('custom-font-input')?.value.trim();
-      if (val) Appearance.applyFont('custom', val);
-    };
-    document.getElementById('btn-apply-custom-font')?.addEventListener('click', applyCustomFont);
-    document.getElementById('custom-font-input')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') applyCustomFont();
+    // --- Color Engine Controls ---
+    document.getElementById('hue-slider')?.addEventListener('input', (e) => {
+      const h = parseInt(e.target.value, 10);
+      const sat = parseInt(document.getElementById('sat-slider')?.value || '22', 10);
+      const hex = ColorEngine.hsl2hex(h, sat, 45);
+      ColorEngine.setPrimary(hex);
+    });
+
+    document.getElementById('sat-slider')?.addEventListener('input', (e) => {
+      const sat = parseInt(e.target.value, 10);
+      const h = parseInt(document.getElementById('hue-slider')?.value || '142', 10);
+      const hex = ColorEngine.hsl2hex(h, sat, 45);
+      ColorEngine.setPrimary(hex);
+    });
+
+    document.getElementById('dark-mode-toggle')?.addEventListener('change', (e) => {
+      ColorEngine.setDarkMode(e.target.checked);
+    });
+
+    document.getElementById('btn-unlock-rgb')?.addEventListener('click', () => {
+      ColorEngine.toggleLock();
+    });
+
+    document.getElementById('btn-reset-color')?.addEventListener('click', () => {
+      ColorEngine.setPrimary('#7C9885');
+    });
+
+    ['rgb-r', 'rgb-g', 'rgb-b'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => {
+        const r = parseInt(document.getElementById('rgb-r').value, 10);
+        const g = parseInt(document.getElementById('rgb-g').value, 10);
+        const b = parseInt(document.getElementById('rgb-b').value, 10);
+        const hex = ColorEngine.rgb2hex(r, g, b);
+        ColorEngine.setPrimary(hex);
+      });
+    });
+
+    document.getElementById('color-hex')?.addEventListener('change', (e) => {
+      let val = e.target.value.trim().replace(/^#/, '');
+      if (/^[0-9a-fA-F]{6}$/.test(val)) {
+        ColorEngine.setPrimary('#' + val);
+      }
     });
 
     // Language options in settings
@@ -2366,24 +2314,90 @@ const App = {
     document.getElementById('btn-export-md')?.addEventListener('click', () => IO.exportMd());
     document.getElementById('btn-export-html')?.addEventListener('click', () => IO.exportHtml());
     document.getElementById('btn-export-all')?.addEventListener('click', () => IO.exportAll());
-    document.getElementById('btn-export-encrypted')?.addEventListener('click', () => IO.exportEncrypted());
     document.getElementById('btn-import')?.addEventListener('click', () => {
       document.getElementById('file-import')?.click();
-    });
-    document.getElementById('btn-import-encrypted')?.addEventListener('click', () => {
-      document.getElementById('file-import-encrypted')?.click();
     });
     document.getElementById('file-import')?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
       if (file) IO.importFile(file);
       e.target.value = ''; // Reset for re-import
     });
-    document.getElementById('file-import-encrypted')?.addEventListener('change', (e) => {
+    document.getElementById('btn-clear-data')?.addEventListener('click', () => IO.clearAll());
+
+    // --- Encrypted Backup Export & Import ---
+    let cryptoAction = null; // 'export' | 'import'
+    let cryptoImportPayload = null;
+
+    document.getElementById('btn-export-encrypted')?.addEventListener('click', () => {
+      cryptoAction = 'export';
+      const modal = document.getElementById('crypto-modal');
+      const title = document.getElementById('crypto-modal-title');
+      const confirmGroup = document.getElementById('crypto-confirm-group');
+      const pwd = document.getElementById('crypto-password');
+      const confirmPwd = document.getElementById('crypto-confirm');
+      if (title) title.textContent = I18n.t('exportEncrypted');
+      if (confirmGroup) confirmGroup.style.display = 'block';
+      if (pwd) pwd.value = '';
+      if (confirmPwd) confirmPwd.value = '';
+      modal?.classList.add('active');
+      pwd?.focus();
+    });
+
+    document.getElementById('btn-import-encrypted')?.addEventListener('click', () => {
+      document.getElementById('file-import-crypto')?.click();
+    });
+
+    document.getElementById('file-import-crypto')?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
-      if (file) IO.importEncrypted(file);
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        cryptoImportPayload = ev.target.result;
+        cryptoAction = 'import';
+        const modal = document.getElementById('crypto-modal');
+        const title = document.getElementById('crypto-modal-title');
+        const confirmGroup = document.getElementById('crypto-confirm-group');
+        const pwd = document.getElementById('crypto-password');
+        if (title) title.textContent = I18n.t('importEncrypted');
+        if (confirmGroup) confirmGroup.style.display = 'none';
+        if (pwd) pwd.value = '';
+        modal?.classList.add('active');
+        pwd?.focus();
+      };
+      reader.readAsText(file);
       e.target.value = '';
     });
-    document.getElementById('btn-clear-data')?.addEventListener('click', () => IO.clearAll());
+
+    document.getElementById('btn-crypto-submit')?.addEventListener('click', async () => {
+      const pwd = document.getElementById('crypto-password')?.value || '';
+      const confirmPwd = document.getElementById('crypto-confirm')?.value || '';
+      const modal = document.getElementById('crypto-modal');
+
+      if (!pwd) {
+        Toast.show(I18n.t('passwordEmpty'), 'error');
+        return;
+      }
+
+      if (cryptoAction === 'export') {
+        if (pwd !== confirmPwd) {
+          Toast.show(I18n.t('passwordMismatch'), 'error');
+          return;
+        }
+        try {
+          await CryptoBackup.exportEncrypted(pwd);
+          modal?.classList.remove('active');
+        } catch (err) {
+          Toast.show(err.message, 'error');
+        }
+      } else if (cryptoAction === 'import') {
+        try {
+          await CryptoBackup.importEncrypted(cryptoImportPayload, pwd);
+          modal?.classList.remove('active');
+        } catch (err) {
+          Toast.show(err.message, 'error');
+        }
+      }
+    });
 
     // --- Close modals on Escape ---
     document.addEventListener('keydown', (e) => {

@@ -4,7 +4,8 @@ description: >-
   Use this skill when the user wants to develop, debug, extend, or maintain the aria. note-taking
   app located at c:\Users\Kanade\Desktop\memoria. Covers the full architecture including the
   single-file ES module app.js, CSS custom property theme system, Markdown+LaTeX rendering pipeline,
-  GitHub Gist sync, PWA/service worker, and GitHub Actions deploy workflow.
+  live math WYSIWYG backspace editing, typography separation, Color Harmony Engine with RGB unlock,
+  AES-256-GCM encrypted backup, GitHub Gist sync, PWA/service worker, and GitHub Actions deploy workflow.
 ---
 
 # aria. Developer Skill
@@ -15,393 +16,196 @@ description: >-
 
 ## 1. Project Overview
 
-**aria.** is a minimalist, offline-capable note-taking PWA built with **zero build tooling** — no bundler, no framework, no transpiler. It runs directly in any modern browser and can be deployed as a static site via GitHub Pages.
+**aria.** is an ultra-minimalist, offline-first, private note-taking PWA with an elegant typographic and visual aesthetic inspired by its name — an aria, an expressive musical melody.
+
+### Zero-Build Principle
+- **No bundlers, no transpilers, no npm dependencies** — runs directly as vanilla HTML5, CSS3, and ES Modules.
+- Deployable directly to GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`).
+- Markdown, KaTeX, and Highlight.js are loaded strictly via CDN.
 
 ### Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Structure | Vanilla HTML5 (`index.html`) |
-| Styling | Vanilla CSS3 (`css/style.css`, 2200+ lines) |
+| Styling | Vanilla CSS3 (`css/style.css`, 2400+ lines) |
 | Logic | Vanilla ES Modules (`js/app.js`, single file) |
 | Markdown | [Marked.js](https://marked.js.org/) (CDN) |
 | Math | [KaTeX](https://katex.org/) (CDN) |
 | Syntax Highlighting | [highlight.js](https://highlightjs.org/) (CDN) |
+| Encryption | Web Crypto API (AES-256-GCM, PBKDF2 100k rounds) |
 | Sync | GitHub Gist REST API |
 | Hosting | GitHub Pages + GitHub Actions |
 | PWA | Service Worker (`sw.js`) + Web App Manifest |
 | Fonts | IBM Plex Sans, Source Serif 4, IBM Plex Mono, Cormorant Garamond (Google Fonts CDN) |
 
-### Design Philosophy
-
-- **Minimalist line-based design** — 1–1.5 px strokes, warm muted palette, generous whitespace
-- **8 px spacing grid** — all margins, paddings, and gaps are multiples of 8 px
-- **Subtle animations** — 200–300 ms transitions only; no gratuitous motion
-- **Multilingual first** — full UI strings in English, Simplified Chinese, and Japanese
+### Design & Brand Identity
+- **Name**: `aria.` (the trailing dot is an intentional part of the brand name).
+- **App Icon (`assets/icon.svg`)**: Pure line-art drawing (純線條畫) inspired by musical acoustics and vocal melody — a flowing melodic sine wave, an echoing harmonic resonance curve, and an overtone dot. Strictly no letter "a" and no literal notebook/pen icons.
+- **Lines & Spacing**: Ultra-fine 1–1.5 px lines, 8 px spacing grid, quiet and restrained whitespace.
+- **No Tacky Emojis**: Strictly avoid emojis like `💡`, `🚀`, `🎯` in UI. Use elegant typographic glyphs: `✦`, `·`, `—`, `◈`.
+- **No Pretentious Theme Marketing**: Pure mathematical color harmony driven by user-selected hue and saturation, rather than marketing themes.
 
 ---
 
-## 2. Architecture Map — `js/app.js`
+## 2. Core Subsystems in `js/app.js`
 
-The entire application lives in one file, divided into clearly commented sections (`// ── §N Name ──`). Never split this into multiple files.
+The entire application lives in `js/app.js`, clearly divided into numbered sections (`// ── §N Name ──`). **Never split this into multiple files.**
 
-### §1 Store — `localStorage` CRUD
-
-Responsible for all persistence. Notes are stored as a JSON array under a namespaced key. Provides:
-- `Store.getAll()` — returns all notes sorted by `updatedAt` desc
-- `Store.get(id)` — returns a single note by ID
-- `Store.save(note)` — upserts (create or update) a note
-- `Store.delete(id)` — removes a note
-- `Store.export()` / `Store.import(json)` — bulk IO helpers
-
-All note objects have the shape:
+### §1 Store — Persistence & Note Model
+Notes are stored in `localStorage` as a JSON array under `aria_notes_v1`.
 ```js
-{ id, title, content, tags, createdAt, updatedAt, pinned, color, font }
-```
-
-### §2 I18n — Internationalization
-
-Holds a `translations` map keyed by locale (`en`, `zh`, `ja`). Every user-visible string must have an entry in all three locales.
-
-- Active locale is stored in `localStorage` and read at boot
-- `I18n.t(key)` returns the translated string for the active locale
-- `I18n.apply()` updates all DOM elements with `[data-i18n]` attributes
-- When adding a new string, **always** add it to all three locale objects
-
-### §3 Renderer — Markdown + LaTeX Pipeline
-
-The most critical section. The pipeline is:
-
-```
-raw content
-  → extract LaTeX blocks ($$…$$, $…$, \[…\], \(…\))  ← PROTECT
-  → run Marked.js on the remaining Markdown
-  → restore LaTeX placeholders
-  → render each placeholder with KaTeX
-  → pass code blocks to highlight.js
-```
-
-**The math-protection step is non-negotiable.** Marked.js would corrupt LaTeX syntax (escaping underscores, backtick-wrapping, etc.) if math were not extracted first. When touching the Renderer:
-- Never reorder the extract → render → reinsert steps
-- Never pass raw LaTeX through `marked()`
-- Always test with both inline (`$...$`) and display (`$$...$$`) math after changes
-
-### §4 Editor — Textarea, Toolbar, View Modes, Resize Handle
-
-Manages the note editing experience:
-- **View modes:** `edit` (textarea only), `split` (side-by-side), `preview` (rendered only)
-- **Toolbar:** bold, italic, code, link, heading, list, math, HR buttons — each wraps/inserts Markdown syntax into the textarea at the cursor
-- **Resize handle:** a draggable divider between editor and preview panes in split mode
-- **Auto-save:** debounced `Store.save()` on every `input` event (300 ms debounce)
-- **Word/char count:** updated live in the status bar
-
-### §5 GitHubSync — Gist API Push/Pull/Merge
-
-Implements cloud backup via a private GitHub Gist:
-- Token and Gist ID stored in `localStorage` (never committed to source)
-- `GitHubSync.push()` — serialises all notes to JSON, PATCHes the Gist
-- `GitHubSync.pull()` — fetches Gist, parses JSON, merges by `updatedAt` (newest wins)
-- `GitHubSync.merge(remote, local)` — the merge algorithm; deduplicates by ID
-- Status indicator in the sidebar reflects last sync time and error state
-
-### §6 CountdownManager
-
-Tracks notes that contain a special `<!-- countdown: ISO8601 -->` frontmatter directive. Renders a live countdown badge on matching note cards. Cleaned up on note deletion.
-
-### §7 Toast
-
-Lightweight notification system. `Toast.show(message, type)` where `type` is `'success'`, `'error'`, or `'info'`. Toasts stack vertically, auto-dismiss after 3 s, and support manual close.
-
-### §8 ContextMenu
-
-Right-click / long-press context menu for note cards. Items: Pin/Unpin, Duplicate, Export, Delete. Positioned relative to cursor; dismissed on outside click or Escape.
-
-### §9 Appearance / ColorEngine
-
-- `Appearance` — manages dark/light mode toggle (flips `[data-dark]` on `<html>`) and font variant (flips `[data-font]` on `<html>`)
-- `ColorEngine.applyAccent(r, g, b)` — programmatically rewrites every `--accent-*` CSS custom property on `:root` using the provided RGB values, enabling the user-selectable accent colour picker without any page reload
-
-### §10 IO — Import / Export
-
-- **Export:** serialises notes to JSON and triggers a browser download; also supports per-note Markdown export
-- **Import:** accepts a JSON file, validates structure, merges via `Store.import()`
-
-### §11 App — Bootstrap & Event Binding
-
-The top-level controller. `App.init()` is the entry point called at the bottom of the file (never inside a module export — the file is a plain script tag with `type="module"`).
-
-Key responsibilities:
-- Render the initial note list
-- Bind all UI events (`App.bindEvents()`)
-- Register the Service Worker
-- Apply saved theme/font/locale preferences
-
-### Streak — Day Streak Tracker
-
-A small utility that reads note `createdAt`/`updatedAt` timestamps to compute consecutive days of activity. Displayed as a flame badge in the sidebar. Resets if no note is modified for 24 h.
-
----
-
-## 3. Key Design Rules
-
-These rules are **mandatory**. Violating them will break the app or the aesthetic.
-
-### Code Rules
-
-| Rule | Rationale |
-|---|---|
-| **Never break the math-protection pipeline** | Marked.js corrupts LaTeX — the extract→render→reinsert order is load-bearing |
-| **Keep everything in `js/app.js`** | Zero-build principle; no bundler means no `import` resolution |
-| **No `import` / `export` statements** | The file is loaded as `<script type="module">` for top-level `await` only; internal structure uses `const` modules (plain objects/closures) |
-| **Run `node -c js/app.js` after every JS edit** | Catches syntax errors before the browser does |
-| **`git commit` after each meaningful change** | Keeps history granular and reversible |
-
-### Aesthetic Rules
-
-| Rule | Rationale |
-|---|---|
-| **No hardcoded hex values in CSS** | All colours must reference `--accent`, `--bg`, `--text`, etc. |
-| **No emoji in UI text** | Breaks the elegant, typographic aesthetic |
-| **No framework dependencies** | Preserves the zero-build, zero-dependency principle |
-| **8 px spacing grid** | All padding/margin values must be multiples of 8 px |
-| **Transitions 200–300 ms only** | Slower feels sluggish; faster feels jarring |
-
----
-
-## 4. CSS Architecture — `css/style.css`
-
-The stylesheet is ~2200 lines, structured as follows:
-
-### Custom Properties (`:root`)
-
-All design tokens are declared here. Never declare a colour anywhere else.
-
-```css
-:root {
-  /* Surfaces */
-  --bg: #FAFAF9;
-  --bg-secondary: #F3F3F1;
-  --surface: #FFFFFF;
-
-  /* Borders */
-  --border: #E8E8E6;
-  --border-light: #F0F0EE;
-
-  /* Text */
-  --text: #1A1A1A;
-  --text-secondary: #6B6B6B;
-  --text-tertiary: #9B9B9B;
-
-  /* Accent (overwritten dynamically by ColorEngine) */
-  --accent: #7C9885;
-  --accent-hover: #6B8774;
-  --accent-light: #E8F0EB;
-
-  /* Semantic */
-  --danger: #C97B7B;
-  --danger-light: #F5E8E8;
-
-  /* Typography */
-  --font-sans: 'IBM Plex Sans', 'Noto Sans SC', 'Noto Sans JP', system-ui, sans-serif;
-  --font-serif: 'Source Serif 4', 'Noto Serif SC', 'Noto Serif JP', Georgia, serif;
-  --font-mono: 'IBM Plex Mono', 'SF Mono', 'Consolas', monospace;
-  --font-literary: 'Cormorant Garamond', 'Noto Serif SC', 'Noto Serif JP', serif;
-  --font-code: var(--font-mono);
-
-  /* Spacing grid (8 px base) */
-  --space-1: 8px;
-  --space-2: 16px;
-  --space-3: 24px;
-  --space-4: 32px;
+{
+  id: string,             // Date.now().toString(36) + random
+  title: string,          // Note title
+  content: string,        // Raw Markdown + LaTeX
+  tags: string[],         // Tags array
+  createdAt: number,      // Unix timestamp
+  updatedAt: number,      // Unix timestamp
+  pinned: boolean,        // Pin to top
+  color: string,          // Optional card accent color
+  font: string            // Optional per-note font override
 }
 ```
 
-### Dark Mode — `[data-dark]` Attribute
+### §2 I18n — Trilingual Internationalization
+Complete UI translations across English (`en`), Traditional/Simplified Chinese (`zh`), and Japanese (`ja`).
+- `I18n.t(key)`: Returns localized string.
+- `I18n.apply()`: Scans DOM for `[data-i18n]` and updates `textContent` or `placeholder`.
+- Whenever adding a UI element, all three language keys **must** be populated.
 
-Dark theme overrides live in `[data-dark] { … }`. `Appearance.toggleDark()` sets or removes `data-dark` on `<html>`. Never use `@media (prefers-color-scheme)` for theming — always follow the explicit attribute.
+### §3 Renderer & Interactive Live Math Pipeline
+Marked.js corrupts LaTeX syntax (e.g. escaping underscores or backticks), so math blocks must be protected.
 
-```css
-[data-dark] {
-  --bg: #1A1A1E;
-  --bg-secondary: #222226;
-  --surface: #2A2A2F;
-  /* … all tokens overridden … */
-}
+#### Read-Only Markdown+LaTeX Pipeline (`Renderer.render(md)`)
+```
+raw markdown
+  → extract display math ($$…$$, \[…\]) to __MATH_BLOCK_N__
+  → extract inline math ($…$, \(…\)) to __MATH_INLINE_N__
+  → marked.parse(text)
+  → restore placeholders
+  → katex.renderToString() with displayMode true/false
+  → highlight.js code block formatting
 ```
 
-### Font Variants — `[data-font]` Attribute
-
-The editor's font family is controlled by the `data-font` attribute on `<html>`:
-
-```css
-[data-font="serif"]  .editor-textarea { font-family: var(--font-serif); }
-[data-font="mono"]   .editor-textarea { font-family: var(--font-mono); }
-[data-font="literary"] .editor-textarea { font-family: var(--font-literary); }
-/* default (no attribute) = --font-sans */
-```
-
-### Dynamic Accent Colour — `ColorEngine.applyAccent(r, g, b)`
-
-When the user picks a custom accent, `ColorEngine` calls:
-
-```js
-ColorEngine.applyAccent(r, g, b) {
-  const root = document.documentElement.style;
-  root.setProperty('--accent', `rgb(${r},${g},${b})`);
-  root.setProperty('--accent-hover', /* darkened */);
-  root.setProperty('--accent-light', /* lightened, low opacity */);
-}
-```
-
-This overwrites the `:root` declarations inline, so it takes priority in the cascade without touching the stylesheet.
+#### Interactive Live Math Pipeline (`Renderer.renderLive(md)`)
+In the **Live View** mode (`#live-editor`):
+1. Formulas (`$...$` and `$$...$$`) are rendered into interactive `.math-live-box` DOM nodes:
+   ```html
+   <span class="math-live-box [display]" data-latex="E = mc^2" tabindex="0">
+     <span class="math-rendered"><!-- KaTeX HTML --></span>
+     <span class="math-editor hidden">
+       <span class="math-delim">$</span>
+       <input type="text" class="math-raw-input" value="E = mc^2" />
+       <span class="math-delim">$</span>
+     </span>
+   </span>
+   ```
+2. **Clicking** the rendered formula reveals the raw LaTeX `<input>` for instant editing.
+3. **Pressing Backspace** on the focused `.math-live-box` or at the boundary expands the formula code.
+4. **Enter, Escape, or Blur** re-compiles the LaTeX in real-time with KaTeX and restores the visual view.
+5. If the input is empty and Backspace is pressed, the entire math box is cleanly deleted.
+6. `Editor.syncFromLive()` serializes DOM back into raw Markdown for autosaving.
 
 ---
 
-## 5. Adding New Features — Step-by-Step Procedure
+## 3. Dedicated Typography Separation
 
-Follow this checklist in order. Do not skip steps.
+To achieve professional typesetting:
+1. **Code Blocks & Inline Code**:
+   - Strictly forced to `var(--font-mono) !important` (JetBrains Mono / IBM Plex Mono).
+   - Dedicated styling: subtle tinted background, 1px border, padded pills for inline code.
+2. **Math Formulas**:
+   - Rendered using KaTeX's dedicated math typefaces (`KaTeX_Main`, `KaTeX_Math`, `KaTeX_AMS !important`).
+   - Formulas stand out with distinct typographic weight, never inheriting generic prose fonts.
+3. **Prose & UI Text**:
+   - Governed by `[data-font]` on `<html>`:
+     - `sans`: IBM Plex Sans + Noto Sans SC/JP.
+     - `serif`: Source Serif 4 + Noto Serif SC/JP.
+     - `mono`: IBM Plex Mono.
+     - `literary`: Cormorant Garamond.
+     - `custom`: Dynamically assigned via `--font-custom`.
 
-### a. Add HTML to `index.html`
+### Custom Font Engine
+Users can specify ANY system or web font:
+- In Settings, selecting "自訂字體 (Custom Font)" displays `#custom-font-input`.
+- Inputting a font family name (e.g. `"Cinzel", "Fira Code", "Songti SC"`) dynamically sets `document.documentElement.style.setProperty('--font-custom', fontFamily)`.
+- Applied seamlessly across all notes.
 
-- Use semantic elements (`<button>`, `<dialog>`, `<section>`, etc.)
-- Add `data-i18n="your.key"` to any element that shows user-visible text
-- Use BEM-style class names: `.component__element--modifier`
-- Never inline styles — use CSS classes
+---
 
-### b. Add Translations to All 3 Locales in §2 I18n
+## 4. Color Harmony Engine (`ColorEngine`)
 
-```js
-const translations = {
-  en: { /* ... */ 'your.key': 'Your text here' },
-  zh: { /* ... */ 'your.key': '你的文字' },
-  ja: { /* ... */ 'your.key': 'あなたのテキスト' },
-};
-```
+aria. replaces flowery marketing themes with a mathematical **Color Harmony Engine**:
+- **Automatic Coordinated Palette**: When the user selects a primary hue or preset:
+  - Generates balanced lightness and saturation curves for Background, Surface, Borders, Secondary text, and Accent.
+  - Generates distinct harmonic palettes for **Light Mode** (high luminance, muted saturation) and **Dark Mode** (deep charcoal, tuned low-light contrast).
+- **RGB Unlock / Custom Override**:
+  - The "解鎖手動調整 (Unlock RGB Sliders)" toggle allows users to break out of automatic harmony and manually tweak R, G, B channels or direct hex values.
+  - When locked, hue and preset selections re-harmonize the entire palette.
 
-**All three are required.** A missing key falls back to the key string, which is visible to users.
+---
 
-### c. Add CSS Rules — Custom Properties Only
+## 5. Encrypted Backup & Security (`CryptoBackup`)
 
-```css
-/* Good */
-.my-component { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+Client-side zero-knowledge encryption ensures note privacy when backing up or migrating notes:
+- **Algorithm**: `AES-256-GCM` authenticated symmetric encryption.
+- **Key Derivation**: `PBKDF2` with `SHA-256`, `100,000` iterations, and cryptographically secure 16-byte random salt (`crypto.getRandomValues`).
+- **Initialization Vector**: Unique 12-byte random IV per export.
+- **File Format**: Encrypted `.aria` file containing a JSON envelope:
+  ```json
+  {
+    "aria_backup": true,
+    "version": 1,
+    "algorithm": "AES-256-GCM",
+    "kdf": "PBKDF2",
+    "iterations": 100000,
+    "salt": "<hex-string>",
+    "iv": "<hex-string>",
+    "ciphertext": "<hex-string>"
+  }
+  ```
+- **Import**: Prompts for the decryption password via `#crypto-modal`, derives the key, decrypts and validates the JSON payload, then merges into `Store`.
 
-/* Bad — never do this */
-.my-component { background: #ffffff; color: #1a1a1a; }
-```
+---
 
-Add dark-mode overrides under `[data-dark] .my-component { … }` only if the custom property override is insufficient.
+## 6. Habit & Streak Tracker (`Streak`)
 
-### d. Add JS Logic
+- Computes consecutive writing days by evaluating `createdAt` and `updatedAt` timestamps across all notes in local storage.
+- Renders a minimal 7-day dot trail indicator in the sidebar:
+  - Active days are filled with the accent color.
+  - Idle days remain subtle hollow rings.
+- Keeps users motivated with zero clutter or gamified distraction.
 
-For a self-contained feature, add a new `const` module object near the bottom of `js/app.js`, before `App`:
+---
 
-```js
-// ── §N MyFeature ──────────────────────────────────────────────
-const MyFeature = {
-  init() { /* setup */ },
-  doThing() { /* logic */ },
-};
-```
+## 7. Cloud Sync (GitHub Gist)
 
-For small additions, extend the most relevant existing section.
+- Connects to GitHub Gist REST API via user-supplied Personal Access Token (PAT with `gist` scope).
+- Auto-sync debounced after changes, plus manual Push / Pull.
+- Intelligent merge: matches note IDs and retains the version with the newer `updatedAt` timestamp.
+- Tokens and Gist IDs are stored strictly in the user's `localStorage` and never transmitted elsewhere.
 
-### e. Wire Up Events in `App.bindEvents()`
+---
 
-```js
-App.bindEvents() {
-  // ... existing bindings ...
-  document.getElementById('my-button').addEventListener('click', () => MyFeature.doThing());
-},
-```
+## 8. Development & Maintenance Guidelines
 
-Call `MyFeature.init()` inside `App.init()` after all other initialisations.
-
-### f. Verify Syntax
-
+### Verification Commands
+Always verify syntax after editing `js/app.js`:
 ```powershell
 node -c js/app.js
 ```
 
-Must print `js/app.js is OK`. Fix any reported syntax errors before committing.
-
-### g. Git Commit
-
+### Git Commits
+Stage changes and commit with concise, descriptive commit messages:
 ```powershell
 git add -A
-git commit -m "feat: describe what you added"
+git commit -m "feat: [brief description]"
 ```
 
-Use conventional commit prefixes: `feat:`, `fix:`, `style:`, `refactor:`, `docs:`.
-
----
-
-## 6. GitHub Deployment
-
-### First-Time Push
-
+### Static Testing Server
+To test locally without external tooling:
 ```powershell
-cd c:\Users\Kanade\Desktop\memoria
-git init                                   # if not already a repo
-git add -A
-git commit -m "feat: initial aria. commit"
-git remote add origin https://github.com/<username>/<repo>.git
-git push -u origin main
+node -e "const http=require('http'),fs=require('fs'),path=require('path'),mime={'.html':'text/html','.css':'text/css','.js':'application/javascript','.json':'application/json','.svg':'image/svg+xml'};http.createServer((req,res)=>{let f=path.join('.',req.url.split('?')[0]);try{if(fs.statSync(f).isDirectory())f=path.join(f,'index.html');const d=fs.readFileSync(f);res.writeHead(200,{'Content-Type':mime[path.extname(f)]||'application/octet-stream'});res.end(d)}catch(e){res.writeHead(404);res.end('Not Found')}}).listen(3333,()=>console.log('Server running on 3333'))"
 ```
-
-### Configure GitHub Pages
-
-1. Go to the repository on GitHub
-2. **Settings → Pages → Build and deployment → Source:** select **GitHub Actions**
-3. The workflow at `.github/workflows/deploy.yml` handles the rest automatically on every push to `main`
-
-### Deploy Workflow (`.github/workflows/deploy.yml`)
-
-The workflow copies the static files to GitHub Pages. It requires no build step — the output is the source itself.
-
----
-
-## 7. GitHub Sync Setup (Gist-Based)
-
-### How It Works
-
-1. The user creates a **Personal Access Token** (PAT) with the `gist` scope at `github.com/settings/tokens`
-2. The token and an optional Gist ID are saved in `localStorage` via the Settings panel (never in source code)
-3. On **Push:** `GitHubSync.push()` serialises all notes to a single JSON blob and PATCHes (or POSTs if no Gist ID yet) the Gist via `fetch('https://api.github.com/gists/…')`
-4. On **Pull:** `GitHubSync.pull()` GETs the Gist, deserialises the JSON, and merges with local notes — newest `updatedAt` wins per note ID
-5. The Gist ID is stored after first push so subsequent syncs update the same Gist
-
-### Security Notes
-
-- The PAT is stored only in `localStorage` of the user's own browser
-- Never log, transmit, or display the token in the UI beyond the masked input field
-- The Gist should be **private** (default when created via the API with a PAT)
-
----
-
-## 8. Common Pitfalls
-
-### Things You Must NEVER Do
-
-| Anti-Pattern | Why It's Wrong |
-|---|---|
-| **Use emoji in UI strings** | Breaks the typographic aesthetic and CJK font rendering |
-| **Add framework/library dependencies** (`npm install …`) | Violates the zero-build principle; breaks the CDN-only deployment |
-| **Hardcode hex values in CSS** | Breaks dark mode and the accent colour system |
-| **Add `import` / `export` statements** | The file is not processed by a bundler; they will cause runtime errors |
-| **Use `document.write()`** | Deprecated, synchronous, destructive |
-| **Use `innerHTML` with untrusted content** | XSS vector — always sanitise or use `textContent` / DOM methods for user data |
-| **Reorder the Renderer pipeline** | Will corrupt all notes that contain LaTeX |
-| **Modify `sw.js` cache list without testing offline** | Can brick the PWA offline mode |
-| **Commit secrets (tokens, passwords) to git** | Never — tokens live only in `localStorage` |
-| **Use `var` or non-strict patterns** | Use `const`/`let` throughout; the file is implicitly strict as a module |
-| **Write transitions faster than 150 ms or slower than 400 ms** | 150 ms feels broken; 400 ms feels sluggish |
-| **Use `px` for font sizes in the editor** | Use `rem` or `em` to respect user browser font preferences |
-
-### Debugging Tips
-
-- **Math not rendering?** Check the Renderer's placeholder extraction regex — a regex change is almost always the cause
-- **Dark mode flicker on load?** The `[data-dark]` attribute must be set synchronously in a `<script>` tag in `<head>` before first paint
-- **Sync failing silently?** Open DevTools Network tab — the Gist API returns descriptive error JSON; also check that the PAT has the `gist` scope
-- **Service worker serving stale files?** Bump the `CACHE_VERSION` constant in `sw.js` and redeploy
-- **CJK text rendering wrong font?** Ensure the Noto Sans/Serif SC and JP font weights are loaded via the Google Fonts `<link>` in `<head>`
+Navigate to `http://localhost:3333`.
