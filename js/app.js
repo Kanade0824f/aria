@@ -728,62 +728,77 @@ const TyporaMode = {
   },
 
   _renderAnnotated(md) {
+    // Split markdown into logical blocks, render each with data-line.
+    // This avoids any marker contamination inside the renderer.
     const lines = md.split('\n');
-    const MARK = '%%TY_LINE_';
-    let src = '';
+    const blocks = [];   // { startLine, text }
     let i = 0;
 
     while (i < lines.length) {
       const line = lines[i];
 
+      // Skip blank lines
+      if (!line.trim()) { i++; continue; }
+
+      const startLine = i;
+
       // Fenced code block
-      if (/^```/.test(line)) {
-        src += '\n' + MARK + i + '%%\n' + line + '\n'; i++;
-        while (i < lines.length && !/^```/.test(lines[i])) { src += lines[i] + '\n'; i++; }
-        if (i < lines.length) { src += lines[i] + '\n'; i++; }
+      if (/^`{3,}/.test(line)) {
+        let text = line + '\n'; i++;
+        while (i < lines.length && !/^`{3,}/.test(lines[i])) { text += lines[i] + '\n'; i++; }
+        if (i < lines.length) { text += lines[i] + '\n'; i++; }
+        blocks.push({ startLine, text });
         continue;
       }
-      // Block math $
-      if (/^$/.test(line)) {
-        src += '\n' + MARK + i + '%%\n' + line + '\n'; i++;
-        while (i < lines.length && !/^$/.test(lines[i])) { src += lines[i] + '\n'; i++; }
-        if (i < lines.length) { src += lines[i] + '\n'; i++; }
+      // Block math $$
+      if (/^\$\$/.test(line)) {
+        let text = line + '\n'; i++;
+        while (i < lines.length && !/^\$\$/.test(lines[i])) { text += lines[i] + '\n'; i++; }
+        if (i < lines.length) { text += lines[i] + '\n'; i++; }
+        blocks.push({ startLine, text });
         continue;
       }
       // Heading
-      if (/^#{1,6}\s/.test(line)) { src += '\n' + MARK + i + '%%\n' + line + '\n'; i++; continue; }
+      if (/^#{1,6}\s/.test(line)) {
+        blocks.push({ startLine, text: line + '\n' }); i++; continue;
+      }
       // Blockquote
       if (/^>/.test(line)) {
-        src += '\n' + MARK + i + '%%\n';
-        while (i < lines.length && /^>/.test(lines[i])) { src += lines[i] + '\n'; i++; }
+        let text = '';
+        while (i < lines.length && /^>/.test(lines[i])) { text += lines[i] + '\n'; i++; }
+        blocks.push({ startLine, text });
         continue;
       }
       // HR
-      if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) { src += '\n' + MARK + i + '%%\n' + line + '\n'; i++; continue; }
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+        blocks.push({ startLine, text: line + '\n' }); i++; continue;
+      }
       // List
       if (/^(\s*[-*+]|\s*\d+\.)/.test(line)) {
-        src += '\n' + MARK + i + '%%\n';
-        while (i < lines.length && (/^(\s*[-*+]|\s*\d+\.)/.test(lines[i]) || (lines[i].length > 0 && /^\s+/.test(lines[i])))) {
-          src += lines[i] + '\n'; i++;
+        let text = '';
+        while (i < lines.length && (/^(\s*[-*+]|\s*\d+\.)/.test(lines[i]) || (lines[i].length > 0 && /^\s{2,}/.test(lines[i])))) {
+          text += lines[i] + '\n'; i++;
         }
+        blocks.push({ startLine, text });
         continue;
       }
-      // Paragraph
-      if (line.trim()) {
-        src += '\n' + MARK + i + '%%\n';
-        while (i < lines.length && lines[i].trim()) { src += lines[i] + '\n'; i++; }
-        continue;
-      }
-      src += '\n'; i++;
+      // Paragraph — consume until blank line
+      let text = '';
+      while (i < lines.length && lines[i].trim()) { text += lines[i] + '\n'; i++; }
+      blocks.push({ startLine, text });
     }
 
-    let html = Renderer.render(src);
-    // Inject data-line onto next block element after marker paragraphs
-    html = html.replace(/<p>%%TY_LINE_(\d+)%%<\/p>\s*(<[a-zA-Z][^>]*)/g, function(_, ln, tag) {
-      return tag + ' data-line="' + ln + '"';
-    });
-    html = html.replace(/<p>%%TY_LINE_\d+%%<\/p>/g, '');
-    return html;
+    // Render each block and wrap with a data-line span
+    return blocks.map(({ startLine, text }) => {
+      const html = Renderer.render(text.trim());
+      // Inject data-line onto the first tag in the rendered HTML
+      const injected = html.replace(/^(\s*<[a-zA-Z][^>]*)/, (m, tag) => {
+        // avoid double-inject
+        if (tag.includes('data-line')) return m;
+        return tag + ` data-line="${startLine}"`;
+      });
+      return injected;
+    }).join('\n');
   },
 
   _bindBlockClicks() {
