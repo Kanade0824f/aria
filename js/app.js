@@ -264,7 +264,8 @@ console.log('Welcome to aria.');
 
   // ── Settings ──────────────────────────────────────────────────────
   defaultSettings: {
-    theme: 'light', font: 'sans', fontSize: 15,
+    themeHue: 150, themeSat: 18, themeLightness: 97, themeDark: false, themeCustom: false,
+    font: 'sans', customFont: '', fontSize: 15,
     editorWidth: 720, language: 'en',
     githubToken: '', gistId: '', autoSync: false,
   },
@@ -316,19 +317,6 @@ const translations = {
     allNotesFolder: 'All', noResults: 'No notes found',
     theme: 'Theme', themePaper: 'Paper', themeNordic: 'Nordic', themeMatcha: 'Matcha', themeSepia: 'Sepia', themeDusk: 'Dusk', themeMidnight: 'Midnight',
     daysStreak: 'day streak', streakLogged: 'Written', streakPending: 'Pending', streakToast: 'Writing streak: {curr} days (Best: {best} days)',
-    customFont: 'Custom', customFontName: 'Custom Font Family',
-    customFontPlaceholder: 'e.g., PingFang SC, Microsoft YaHei, Inter, Fira Code...',
-    customFontHint: 'Enter any font installed on your system or loaded via web',
-    encryptedBackup: 'Encrypted Backup',
-    encryptedBackupHint: 'Zero-knowledge AES-256-GCM encryption. Your password never leaves your browser.',
-    exportEncrypted: 'Export Encrypted (.aria)', importEncrypted: 'Import Encrypted',
-    cryptoTitle: 'Encrypted Backup', password: 'Password', confirmPassword: 'Confirm Password',
-    confirm: 'Confirm', passwordMismatch: 'Passwords do not match', passwordEmpty: 'Password cannot be empty',
-    wrongPassword: 'Incorrect password or corrupted backup file',
-    backupExportSuccess: 'Encrypted backup saved successfully',
-    backupImportSuccess: 'Backup restored and decrypted successfully',
-    mathClickHint: 'Click or Backspace to edit formula',
-    lockHarmony: 'Harmonize (Locked)', unlockHarmony: 'Manual RGB (Unlocked)',
   },
   zh: {
     search: '搜尋筆記...', newNote: '新增筆記', allNotes: '全部筆記',
@@ -358,19 +346,6 @@ const translations = {
     allNotesFolder: '全部', noResults: '找不到筆記',
     theme: '主題風格', themePaper: '宣紙', themeNordic: '北歐', themeMatcha: '抹茶', themeSepia: '古卷', themeDusk: '暮夜', themeMidnight: '極夜',
     daysStreak: '天連續記錄', streakLogged: '今日已記', streakPending: '待記錄', streakToast: '已連續寫作 {curr} 天（最佳紀錄 {best} 天）',
-    customFont: '自選字體', customFontName: '自選字體名稱',
-    customFontPlaceholder: '例如：PingFang SC, 微軟正黑體, 霞鶩文楷, Inter...',
-    customFontHint: '可輸入任意本機已安裝字體或線上字體名稱',
-    encryptedBackup: '加密備份存檔',
-    encryptedBackupHint: '採用端對端 AES-256-GCM 高強度加密，密碼絕不離開瀏覽器，保障純私密安全',
-    exportEncrypted: '加密匯出存檔 (.aria)', importEncrypted: '解密還原存檔',
-    cryptoTitle: '加密備份驗證', password: '加密密碼', confirmPassword: '確認密碼',
-    confirm: '確認執行', passwordMismatch: '兩次輸入的密碼不一致', passwordEmpty: '密碼不可為空',
-    wrongPassword: '密碼錯誤或存檔檔案損壞',
-    backupExportSuccess: '加密存檔已成功匯出並下載',
-    backupImportSuccess: '存檔已成功解密並還原所有資料',
-    mathClickHint: '點擊或按 Backspace 編輯公式代碼',
-    lockHarmony: '自動協調色彩 (已鎖定)', unlockHarmony: '自選調色 (已解鎖)',
   },
   ja: {
     search: 'ノートを検索...', newNote: '新規ノート', allNotes: 'すべてのノート',
@@ -401,19 +376,6 @@ const translations = {
     allNotesFolder: 'すべて', noResults: 'ノートが見つかりません',
     theme: 'テーマ', themePaper: '和紙', themeNordic: '北欧', themeMatcha: '抹茶', themeSepia: 'セピア', themeDusk: '夕暮れ', themeMidnight: '真夜中',
     daysStreak: '日連続記録', streakLogged: '記録済み', streakPending: '未記録', streakToast: '連続執筆 {curr} 日目（最高記録 {best} 日）',
-    customFont: 'カスタム', customFontName: 'カスタムフォント名',
-    customFontPlaceholder: '例：Noto Sans JP, メイリオ, Inter...',
-    customFontHint: 'インストールされているフォント名を入力してください',
-    encryptedBackup: '暗号化バックアップ',
-    encryptedBackupHint: 'ブラウザ内 AES-256-GCM 暗号化。パスワードは端末外に送信されません',
-    exportEncrypted: '暗号化エクスポート (.aria)', importEncrypted: '暗号化インポート',
-    cryptoTitle: '暗号化認証', password: 'パスワード', confirmPassword: 'パスワード再入力',
-    confirm: '実行', passwordMismatch: 'パスワードが一致しません', passwordEmpty: 'パスワードを入力してください',
-    wrongPassword: 'パスワードが正しくないかファイルが破損しています',
-    backupExportSuccess: '暗号化バックアップを保存しました',
-    backupImportSuccess: 'バックアップを正常に復元しました',
-    mathClickHint: 'クリックまたは Backspace で数式を編集',
-    lockHarmony: '自動調和 (ロック)', unlockHarmony: '手動調整 (アンロック)',
   },
 };
 
@@ -496,44 +458,6 @@ const Renderer = {
 
     return html;
   },
-
-  /** Render markdown with interactive editable KaTeX math boxes */
-  renderLive(md) {
-    this.init();
-    if (!md) return '';
-
-    const mathChips = [];
-    let src = md;
-
-    // Display math: $$...$$ or \[...\]
-    src = src.replace(/\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]/g, (_, a, b) => {
-      mathChips.push({ display: true, tex: (a || b).trim() });
-      return `%%MATHCHIP_${mathChips.length - 1}%%`;
-    });
-    // Inline math: $...$ or \(...\)
-    src = src.replace(/\$([^\$\n]+?)\$|\\\((.+?)\\\)/g, (_, a, b) => {
-      mathChips.push({ display: false, tex: (a || b).trim() });
-      return `%%MATHCHIP_${mathChips.length - 1}%%`;
-    });
-
-    let html = window.marked.parse(src);
-
-    html = html.replace(/%%MATHCHIP_(\d+)%%/g, (_, i) => {
-      const { display, tex } = mathChips[+i];
-      let rendered = '';
-      try {
-        rendered = window.katex ? window.katex.renderToString(tex, { displayMode: display, throwOnError: false }) : tex;
-      } catch {
-        rendered = tex;
-      }
-      const delim = display ? '$$' : '$';
-      const blockClass = display ? ' block' : '';
-      const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `<span class="math-live-box${blockClass}" data-tex="${esc(tex)}" data-display="${display}" tabindex="0" title="${I18n.t('mathClickHint')}"><span class="math-rendered">${rendered}</span><span class="math-editor hidden"><span class="math-delim">${delim}</span><input type="text" class="math-raw-input" value="${esc(tex)}" spellcheck="false"><span class="math-delim">${delim}</span></span></span>`;
-    });
-
-    return html;
-  },
 };
 
 
@@ -543,7 +467,7 @@ const Renderer = {
 
 const Editor = {
   currentNoteId: null,
-  viewMode: 'live',        // 'live' | 'edit' | 'split' | 'preview'
+  viewMode: 'edit',        // 'edit' | 'split' | 'preview'
   _saveTimer: null,
   _previewTimer: null,
 
@@ -553,7 +477,6 @@ const Editor = {
   cacheElements() {
     this.el = {
       editor:       document.getElementById('editor'),
-      liveEditor:   document.getElementById('live-editor'),
       editorPane:   document.getElementById('editor-pane'),
       previewPane:  document.getElementById('preview-pane'),
       preview:      document.getElementById('preview'),
@@ -576,7 +499,6 @@ const Editor = {
     this.el.editor.value = note.content;
     this.updateCharCount();
     this.updatePreview();
-    this.updateLiveEditor();
     this.showEditor(true);
 
     // Mark active in sidebar
@@ -595,125 +517,10 @@ const Editor = {
     this.viewMode = mode;
     document.querySelectorAll('.view-toggle-btn').forEach(btn =>
       btn.classList.toggle('active', btn.dataset.view === mode));
-
-    const isLive = mode === 'live';
-    const isEdit = mode === 'edit';
-    const isSplit = mode === 'split';
-    const isPreview = mode === 'preview';
-
-    this.el.editorPane?.classList.toggle('hidden', isPreview);
-    this.el.previewPane?.classList.toggle('hidden', isLive || isEdit);
-    this.el.resizeHandle?.classList.toggle('hidden', !isSplit);
-
-    this.el.liveEditor?.classList.toggle('hidden', !isLive);
-    this.el.editor?.classList.toggle('hidden', isLive);
-
-    if (isLive) {
-      this.updateLiveEditor();
-    } else if (isSplit || isPreview) {
-      this.updatePreview();
-    }
-  },
-
-  updateLiveEditor() {
-    if (!this.el.liveEditor || !this.el.editor) return;
-    this.el.liveEditor.innerHTML = Renderer.renderLive(this.el.editor.value);
-    this.bindLiveMathBoxes();
-  },
-
-  bindLiveMathBoxes() {
-    if (!this.el.liveEditor) return;
-    const boxes = this.el.liveEditor.querySelectorAll('.math-live-box');
-
-    boxes.forEach(box => {
-      const rendered = box.querySelector('.math-rendered');
-      const editor = box.querySelector('.math-editor');
-      const input = box.querySelector('.math-raw-input');
-      const isDisplay = box.dataset.display === 'true';
-
-      const openEditor = () => {
-        rendered?.classList.add('hidden');
-        editor?.classList.remove('hidden');
-        box.classList.add('editing');
-        if (input) {
-          input.focus();
-          input.select();
-        }
-      };
-
-      const closeEditor = () => {
-        if (!input) return;
-        const newTex = input.value.trim();
-        box.classList.remove('editing');
-        editor?.classList.add('hidden');
-
-        if (!newTex) {
-          box.remove();
-        } else {
-          box.dataset.tex = newTex;
-          try {
-            if (rendered) {
-              rendered.innerHTML = window.katex ? window.katex.renderToString(newTex, { displayMode: isDisplay, throwOnError: false }) : newTex;
-            }
-          } catch {
-            if (rendered) rendered.textContent = newTex;
-          }
-          rendered?.classList.remove('hidden');
-        }
-
-        Editor.syncFromLive();
-      };
-
-      // Click to edit
-      rendered?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEditor();
-      });
-
-      // Backspace or Enter when focused on box
-      box.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' || e.key === 'Enter') {
-          e.preventDefault();
-          e.stopPropagation();
-          openEditor();
-        }
-      });
-
-      if (input) {
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === 'Escape') {
-            e.preventDefault();
-            e.stopPropagation();
-            closeEditor();
-          } else if (e.key === 'Backspace' && input.value === '') {
-            e.preventDefault();
-            e.stopPropagation();
-            box.remove();
-            Editor.syncFromLive();
-          }
-        });
-
-        input.addEventListener('blur', () => {
-          closeEditor();
-        });
-      }
-    });
-  },
-
-  syncFromLive() {
-    if (!this.el.liveEditor || !this.el.editor) return;
-    const clone = this.el.liveEditor.cloneNode(true);
-    clone.querySelectorAll('.math-live-box').forEach(box => {
-      const tex = box.dataset.tex;
-      const isDisplay = box.dataset.display === 'true';
-      const delim = isDisplay ? '$$' : '$';
-      box.replaceWith(document.createTextNode(` ${delim}${tex}${delim} `));
-    });
-
-    const newContent = clone.innerText || clone.textContent || '';
-    this.el.editor.value = newContent;
-    this.updateCharCount();
-    this.scheduleSave();
+    this.el.editorPane?.classList.toggle('hidden', mode === 'preview');
+    this.el.previewPane?.classList.toggle('hidden', mode === 'edit');
+    this.el.resizeHandle?.classList.toggle('hidden', mode !== 'split');
+    if (mode !== 'edit') this.updatePreview();
   },
 
   updatePreview() {
@@ -1210,50 +1017,257 @@ const ContextMenu = {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   §9  THEME & FONT MANAGEMENT
+   §9  COLOR ENGINE + FONT MANAGEMENT
    ═══════════════════════════════════════════════════════════════════ */
 
-const Appearance = {
-  applyTheme(theme) {
-    let resolved = theme || 'paper';
-    if (resolved === 'light') resolved = 'paper';
-    if (resolved === 'dark') resolved = 'dusk';
+const ColorEngine = {
+  // Preset hues [hue, sat]
+  PRESETS: [
+    [142, 22],  // Sage green (default)
+    [210, 20],  // Slate blue
+    [25,  22],  // Warm amber
+    [280, 18],  // Soft violet
+    [0,   20],  // Rose
+    [185, 20],  // Teal
+  ],
+  _rgbUnlocked: false,
 
-    document.documentElement.dataset.theme = resolved;
-
-    const isDark = resolved === 'dusk' || resolved === 'midnight' || document.documentElement.dataset.theme === 'dark';
-    const lightSheet = document.getElementById('hljs-light');
-    const darkSheet = document.getElementById('hljs-dark');
-    if (lightSheet) lightSheet.disabled = isDark;
-    if (darkSheet) darkSheet.disabled = !isDark;
-
-    Store.saveSettings({ theme: resolved });
+  _buildPalette(h, s, dark) {
+    const sc = Math.min(s, 60);
+    return dark ? {
+      '--bg':            `hsl(${h},${s}%,10%)`,
+      '--bg-secondary':  `hsl(${h},${s}%,13%)`,
+      '--surface':       `hsl(${h},${s}%,16%)`,
+      '--border':        `hsl(${h},${s}%,22%)`,
+      '--border-light':  `hsl(${h},${s}%,18%)`,
+      '--text':          `hsl(${h},8%,90%)`,
+      '--text-secondary':`hsl(${h},6%,60%)`,
+      '--text-tertiary': `hsl(${h},4%,42%)`,
+      '--accent':        `hsl(${h},${Math.min(sc+10,65)}%,65%)`,
+      '--accent-hover':  `hsl(${h},${Math.min(sc+10,65)}%,72%)`,
+      '--accent-light':  `hsl(${h},${s}%,18%)`,
+      '--selection-bg':  `hsl(${h},${s}%,22%)`,
+      '--code-bg':       `hsl(${h},${s}%,14%)`,
+    } : {
+      '--bg':            `hsl(${h},${Math.max(s-8,2)}%,98%)`,
+      '--bg-secondary':  `hsl(${h},${Math.max(s-6,2)}%,95%)`,
+      '--surface':       `hsl(0,0%,100%)`,
+      '--border':        `hsl(${h},${Math.max(s-10,2)}%,88%)`,
+      '--border-light':  `hsl(${h},${Math.max(s-10,2)}%,93%)`,
+      '--text':          `hsl(${h},8%,12%)`,
+      '--text-secondary':`hsl(${h},4%,42%)`,
+      '--text-tertiary': `hsl(${h},3%,62%)`,
+      '--accent':        `hsl(${h},${Math.min(sc+10,55)}%,38%)`,
+      '--accent-hover':  `hsl(${h},${Math.min(sc+10,55)}%,30%)`,
+      '--accent-light':  `hsl(${h},${Math.min(sc+10,55)}%,92%)`,
+      '--selection-bg':  `hsl(${h},${Math.min(sc+10,55)}%,88%)`,
+      '--code-bg':       `hsl(${h},${Math.max(s-12,0)}%,96%)`,
+    };
   },
 
-  toggleTheme() {
-    const isDark = document.documentElement.dataset.theme === 'dark' || document.documentElement.dataset.theme === 'dusk' || document.documentElement.dataset.theme === 'midnight';
-    ColorEngine.setDarkMode(!isDark);
-  },
+  applyPalette(h, s, dark, save = true) {
+    const root = document.documentElement;
+    // Dark mode via [data-dark] attribute
+    if (dark) root.setAttribute('data-dark', ''); else root.removeAttribute('data-dark');
 
-  applyFont(font, customFamily = '') {
-    document.documentElement.dataset.font = font;
-    if (font === 'custom') {
-      const family = customFamily || Store.getSettings().customFontFamily || 'system-ui';
-      document.documentElement.style.setProperty('--font-custom', `"${family}", var(--font-sans)`);
-      Store.saveSettings({ font, customFontFamily: family });
-    } else {
-      Store.saveSettings({ font });
+    const palette = this._buildPalette(h, s, dark);
+    Object.entries(palette).forEach(([k, v]) => root.style.setProperty(k, v));
+
+    // hljs code highlight theme
+    const ls = document.getElementById('hljs-light');
+    const ds = document.getElementById('hljs-dark');
+    if (ls) ls.disabled = dark;
+    if (ds) ds.disabled = !dark;
+
+    if (save) Store.saveSettings({ themeHue: h, themeSat: s, themeDark: dark });
+    this._syncUI(h, s, dark);
+
+    // Update sat slider gradient
+    const satEl = document.getElementById('sat-slider');
+    if (satEl) {
+      satEl.style.setProperty('--sat-low', `hsl(${h},10%,55%)`);
+      satEl.style.setProperty('--sat-high', `hsl(${h},80%,45%)`);
     }
+  },
+
+  applyFromHex(hex, dark, save = true) {
+    // Convert #RRGGBB → HSL, then apply
+    const r = parseInt(hex.slice(0,2),16)/255;
+    const g = parseInt(hex.slice(2,4),16)/255;
+    const b = parseInt(hex.slice(4,6),16)/255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b);
+    const l = (max+min)/2;
+    let h=0, s=0;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+      switch(max) {
+        case r: h = ((g-b)/d + (g<b?6:0))/6; break;
+        case g: h = ((b-r)/d + 2)/6; break;
+        case b: h = ((r-g)/d + 4)/6; break;
+      }
+    }
+    this.applyPalette(Math.round(h*360), Math.round(s*100), dark, save);
+  },
+
+  toggleDark() {
+    const s = Store.getSettings();
+    this.applyPalette(s.themeHue ?? 142, s.themeSat ?? 22, !(s.themeDark ?? false));
+  },
+
+  _syncUI(h, s, dark) {
+    const hEl = document.getElementById('hue-slider');
+    const sEl = document.getElementById('sat-slider');
+    const dEl = document.getElementById('dark-mode-toggle');
+    const dot = document.getElementById('color-preview-dot');
+    if (hEl) hEl.value = h;
+    if (sEl) sEl.value = s;
+    if (dEl) dEl.checked = dark;
+    if (dot) {
+      const accent = dark
+        ? `hsl(${h},${Math.min(s+10,65)}%,65%)`
+        : `hsl(${h},${Math.min(s+10,55)}%,38%)`;
+      dot.style.background = accent;
+    }
+  },
+
+  renderPresets() {
+    const container = document.getElementById('preset-swatches');
+    if (!container) return;
+    container.innerHTML = '';
+    const s = Store.getSettings();
+    const curH = s.themeHue ?? 142;
+    this.PRESETS.forEach(([h, sat]) => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-swatch' + (Math.abs(h - curH) < 5 ? ' active' : '');
+      btn.style.background = `hsl(${h},${sat+10}%,45%)`;
+      btn.title = `Hue ${h}`;
+      btn.addEventListener('click', () => {
+        this.applyPalette(h, sat, s.themeDark ?? false);
+        document.querySelectorAll('.preset-swatch').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+      });
+      container.appendChild(btn);
+    });
+  },
+
+  bindColorEngine() {
+    const s = () => Store.getSettings();
+
+    document.getElementById('dark-mode-toggle')?.addEventListener('change', e => {
+      const cfg = s();
+      this.applyPalette(cfg.themeHue ?? 142, cfg.themeSat ?? 22, e.target.checked);
+    });
+
+    document.getElementById('hue-slider')?.addEventListener('input', e => {
+      const cfg = s();
+      this.applyPalette(+e.target.value, cfg.themeSat ?? 22, cfg.themeDark ?? false);
+      this.renderPresets();
+    });
+
+    document.getElementById('sat-slider')?.addEventListener('input', e => {
+      const cfg = s();
+      this.applyPalette(cfg.themeHue ?? 142, +e.target.value, cfg.themeDark ?? false);
+    });
+
+    document.getElementById('btn-reset-color')?.addEventListener('click', () => {
+      this.applyPalette(142, 22, false);
+      this.renderPresets();
+    });
+
+    document.getElementById('btn-unlock-rgb')?.addEventListener('click', () => {
+      this._rgbUnlocked = !this._rgbUnlocked;
+      const adv = document.getElementById('color-advanced');
+      const btn = document.getElementById('btn-unlock-rgb');
+      if (adv) adv.classList.toggle('open', this._rgbUnlocked);
+      if (btn) btn.classList.toggle('active', this._rgbUnlocked);
+      if (this._rgbUnlocked) this._syncRgbFromSettings();
+    });
+
+    // RGB sliders
+    const updateFromRgb = () => {
+      const r = +(document.getElementById('rgb-r')?.value ?? 124);
+      const g = +(document.getElementById('rgb-g')?.value ?? 152);
+      const b = +(document.getElementById('rgb-b')?.value ?? 133);
+      const hex = r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+      const hexEl = document.getElementById('color-hex');
+      if (hexEl) hexEl.value = hex.toUpperCase();
+      this.applyFromHex(hex, Store.getSettings().themeDark ?? false);
+    };
+    ['rgb-r','rgb-g','rgb-b'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', updateFromRgb);
+    });
+
+    document.getElementById('color-hex')?.addEventListener('change', e => {
+      const val = e.target.value.replace(/[^0-9a-fA-F]/g,'').slice(0,6).padEnd(6,'0');
+      this.applyFromHex(val, Store.getSettings().themeDark ?? false);
+      this._syncRgbFromHex(val);
+    });
+  },
+
+  _syncRgbFromSettings() {
+    const cfg = Store.getSettings();
+    const h = cfg.themeHue ?? 142, s = cfg.themeSat ?? 22, dark = cfg.themeDark ?? false;
+    // Convert HSL accent to RGB for sliders
+    const l = dark ? 0.65 : 0.38;
+    const sl = s / 100;
+    const q = l < 0.5 ? l*(1+sl) : l+sl-l*sl;
+    const p = 2*l - q;
+    const toRgb = t => {
+      let tc = t < 0 ? t+1 : t > 1 ? t-1 : t;
+      if (tc < 1/6) return p + (q-p)*6*tc;
+      if (tc < 1/2) return q;
+      if (tc < 2/3) return p + (q-p)*(2/3-tc)*6;
+      return p;
+    };
+    const hN = h/360;
+    const r = Math.round(toRgb(hN+1/3)*255);
+    const g = Math.round(toRgb(hN)*255);
+    const b = Math.round(toRgb(hN-1/3)*255);
+    const rEl = document.getElementById('rgb-r');
+    const gEl = document.getElementById('rgb-g');
+    const bEl = document.getElementById('rgb-b');
+    const hEl = document.getElementById('color-hex');
+    if (rEl) rEl.value = r;
+    if (gEl) gEl.value = g;
+    if (bEl) bEl.value = b;
+    if (hEl) hEl.value = r.toString(16).padStart(2,'0').toUpperCase() + g.toString(16).padStart(2,'0').toUpperCase() + b.toString(16).padStart(2,'0').toUpperCase();
+  },
+
+  _syncRgbFromHex(hex) {
+    const r = parseInt(hex.slice(0,2),16);
+    const g = parseInt(hex.slice(2,4),16);
+    const b = parseInt(hex.slice(4,6),16);
+    const rEl = document.getElementById('rgb-r');
+    const gEl = document.getElementById('rgb-g');
+    const bEl = document.getElementById('rgb-b');
+    if (rEl) rEl.value = r;
+    if (gEl) gEl.value = g;
+    if (bEl) bEl.value = b;
+  },
+};
+
+// Keep Appearance as alias + add font/lang methods
+const Appearance = {
+  applyFont(font, customName) {
+    document.documentElement.dataset.font = font;
+    Store.saveSettings({ font, customFont: customName || Store.getSettings().customFont || '' });
     const label = document.getElementById('current-font-label');
     if (label) {
-      const names = { sans: 'Sans', serif: 'Serif', mono: 'Mono', literary: 'Literary', custom: 'Custom' };
+      const names = { sans: 'Sans', serif: 'Serif', mono: 'Mono', literary: 'Literary', custom: customName || 'Custom' };
       label.textContent = names[font] || font;
     }
     document.querySelectorAll('.font-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.font === font));
 
-    const customWrapper = document.getElementById('custom-font-wrapper');
-    if (customWrapper) customWrapper.style.display = font === 'custom' ? 'block' : 'none';
+    if (font === 'custom' && customName) {
+      // Load Google Font if needed
+      const id = 'custom-font-link';
+      let link = document.getElementById(id);
+      if (!link) { link = document.createElement('link'); link.id = id; link.rel = 'stylesheet'; document.head.appendChild(link); }
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(customName)}&display=swap`;
+      document.documentElement.style.setProperty('--font-custom', `'${customName}', var(--font-sans)`);
+    }
   },
 
   applyFontSize(size) {
@@ -1287,242 +1301,6 @@ const Appearance = {
     document.querySelectorAll('.lang-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.lang === next));
   },
-};
-
-
-/* ═══════════════════════════════════════════════════════════════════
-   §9a COLOR ENGINE — Auto-Harmonized & Unlocked RGB System
-   ═══════════════════════════════════════════════════════════════════ */
-
-const ColorEngine = {
-  KEY: 'aria_color_custom',
-
-  PRESETS: [
-    { name: 'Sage', hex: '#5B8266' },
-    { name: 'Slate', hex: '#4E738C' },
-    { name: 'Indigo', hex: '#56648A' },
-    { name: 'Amber', hex: '#8E6B47' },
-    { name: 'Rose', hex: '#8F5E68' },
-    { name: 'Monochrome', hex: '#555555' }
-  ],
-
-  getCustom() {
-    try {
-      const def = { isLocked: true, primaryHex: '#7C9885', isDark: false };
-      return { ...def, ...JSON.parse(localStorage.getItem(this.KEY) || '{}') };
-    } catch {
-      return { isLocked: true, primaryHex: '#7C9885', isDark: false };
-    }
-  },
-
-  saveCustom(data) {
-    const cur = this.getCustom();
-    const updated = { ...cur, ...data };
-    localStorage.setItem(this.KEY, JSON.stringify(updated));
-    return updated;
-  },
-
-  hex2rgb(hex) {
-    hex = (hex || '').replace(/^#/, '');
-    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-    const num = parseInt(hex, 16) || 0;
-    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
-  },
-
-  rgb2hex(r, g, b) {
-    return '#' + [r, g, b].map(x => {
-      const h = Math.max(0, Math.min(255, Math.round(x))).toString(16);
-      return h.length === 1 ? '0' + h : h;
-    }).join('').toUpperCase();
-  },
-
-  rgb2hsl(r, g, b) {
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-    if (max === min) {
-      h = s = 0;
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
-      }
-      h /= 6;
-    }
-    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
-  },
-
-  hsl2rgb(h, s, l) {
-    h /= 360; s /= 100; l /= 100;
-    let r, g, b;
-    if (s === 0) {
-      r = g = b = l;
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-      };
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
-    }
-    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
-  },
-
-  hsl2hex(h, s, l) {
-    const { r, g, b } = this.hsl2rgb(h, s, l);
-    return this.rgb2hex(r, g, b);
-  },
-
-  harmonize(primaryHex, isDark = false) {
-    const { r, g, b } = this.hex2rgb(primaryHex);
-    const { h, s, l } = this.rgb2hsl(r, g, b);
-
-    if (!isDark) {
-      return {
-        accent: this.hsl2hex(h, Math.max(30, Math.min(s, 65)), Math.max(35, Math.min(l, 46))),
-        accentHover: this.hsl2hex(h, Math.max(30, Math.min(s, 65)), Math.max(28, Math.min(l - 8, 38))),
-        accentLight: this.hsl2hex(h, Math.min(s * 0.4, 25), 94),
-        bg: this.hsl2hex(h, Math.min(s * 0.15, 8), 98),
-        bgSecondary: this.hsl2hex(h, Math.min(s * 0.2, 12), 95),
-        surface: '#FFFFFF',
-        border: this.hsl2hex(h, Math.min(s * 0.25, 14), 90),
-        borderLight: this.hsl2hex(h, Math.min(s * 0.2, 10), 94),
-        text: this.hsl2hex(h, Math.min(s * 0.3, 15), 11),
-        textSecondary: this.hsl2hex(h, Math.min(s * 0.2, 10), 42),
-        textTertiary: this.hsl2hex(h, Math.min(s * 0.15, 8), 62),
-        selectionBg: this.hsl2hex(h, Math.min(s * 0.6, 45), 88),
-        codeBg: this.hsl2hex(h, Math.min(s * 0.2, 10), 96),
-        shadowColor: 'rgba(0,0,0,0.05)'
-      };
-    } else {
-      return {
-        accent: this.hsl2hex(h, Math.max(40, Math.min(s, 70)), Math.max(62, Math.min(l, 74))),
-        accentHover: this.hsl2hex(h, Math.max(40, Math.min(s, 70)), Math.min(82, l + 8)),
-        accentLight: this.hsl2hex(h, Math.min(s * 0.4, 30), 18),
-        bg: this.hsl2hex(h, Math.min(s * 0.2, 12), 10),
-        bgSecondary: this.hsl2hex(h, Math.min(s * 0.25, 15), 14),
-        surface: this.hsl2hex(h, Math.min(s * 0.2, 12), 17),
-        border: this.hsl2hex(h, Math.min(s * 0.25, 18), 24),
-        borderLight: this.hsl2hex(h, Math.min(s * 0.2, 14), 19),
-        text: this.hsl2hex(h, Math.min(s * 0.15, 8), 92),
-        textSecondary: this.hsl2hex(h, Math.min(s * 0.15, 8), 64),
-        textTertiary: this.hsl2hex(h, Math.min(s * 0.1, 5), 45),
-        selectionBg: this.hsl2hex(h, Math.min(s * 0.5, 35), 22),
-        codeBg: this.hsl2hex(h, Math.min(s * 0.2, 10), 14),
-        shadowColor: 'rgba(0,0,0,0.35)'
-      };
-    }
-  },
-
-  apply() {
-    const cfg = this.getCustom();
-    document.documentElement.dataset.theme = cfg.isDark ? 'dark' : 'light';
-
-    const lightSheet = document.getElementById('hljs-light');
-    const darkSheet = document.getElementById('hljs-dark');
-    if (lightSheet) lightSheet.disabled = cfg.isDark;
-    if (darkSheet) darkSheet.disabled = !cfg.isDark;
-
-    if (cfg.isLocked) {
-      const palette = this.harmonize(cfg.primaryHex, cfg.isDark);
-      const root = document.documentElement;
-      Object.entries(palette).forEach(([k, val]) => {
-        const cssVar = '--' + k.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
-        root.style.setProperty(cssVar, val);
-      });
-    } else if (cfg.unlockedColors) {
-      const root = document.documentElement;
-      root.style.setProperty('--accent', cfg.unlockedColors.accent || '#7C9885');
-      root.style.setProperty('--bg', cfg.unlockedColors.bg || '#FAFAF9');
-      root.style.setProperty('--surface', cfg.unlockedColors.surface || '#FFFFFF');
-      root.style.setProperty('--text', cfg.unlockedColors.text || '#1A1A1A');
-    }
-  },
-
-  setPrimary(hex) {
-    this.saveCustom({ primaryHex: hex });
-    this.apply();
-    this.renderSettingsUI();
-  },
-
-  setDarkMode(isDark) {
-    this.saveCustom({ isDark });
-    this.apply();
-    this.renderSettingsUI();
-  },
-
-  toggleLock() {
-    const cfg = this.getCustom();
-    const isLocked = !cfg.isLocked;
-    this.saveCustom({ isLocked });
-    this.apply();
-    this.renderSettingsUI();
-    Toast.show(isLocked ? I18n.t('lockHarmony') : I18n.t('unlockHarmony'), 'info', 1800);
-  },
-
-  renderSettingsUI() {
-    const cfg = this.getCustom();
-    const darkToggle = document.getElementById('dark-mode-toggle');
-    if (darkToggle) darkToggle.checked = cfg.isDark;
-
-    const rgb = this.hex2rgb(cfg.primaryHex);
-    const hsl = this.rgb2hsl(rgb.r, rgb.g, rgb.b);
-
-    const hueSlider = document.getElementById('hue-slider');
-    const satSlider = document.getElementById('sat-slider');
-    const previewDot = document.getElementById('color-preview-dot');
-
-    if (hueSlider) hueSlider.value = hsl.h;
-    if (satSlider) satSlider.value = hsl.s;
-    if (previewDot) previewDot.style.backgroundColor = cfg.primaryHex;
-
-    const btnLock = document.getElementById('btn-unlock-rgb');
-    const advPanel = document.getElementById('color-advanced');
-
-    if (btnLock) {
-      btnLock.textContent = cfg.isLocked ? I18n.t('unlockHarmony') : I18n.t('lockHarmony');
-    }
-    if (advPanel) {
-      advPanel.classList.toggle('active', !cfg.isLocked);
-    }
-
-    // Presets
-    const presetBox = document.getElementById('preset-swatches');
-    if (presetBox && presetBox.children.length === 0) {
-      presetBox.innerHTML = '';
-      this.PRESETS.forEach(p => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-swatch';
-        btn.title = p.name;
-        btn.style.backgroundColor = p.hex;
-        btn.addEventListener('click', () => {
-          ColorEngine.setPrimary(p.hex);
-        });
-        presetBox.appendChild(btn);
-      });
-    }
-
-    // Sliders
-    const rSlider = document.getElementById('rgb-r');
-    const gSlider = document.getElementById('rgb-g');
-    const bSlider = document.getElementById('rgb-b');
-    const hexInput = document.getElementById('color-hex');
-
-    if (rSlider) rSlider.value = rgb.r;
-    if (gSlider) gSlider.value = rgb.g;
-    if (bSlider) bSlider.value = rgb.b;
-    if (hexInput) hexInput.value = cfg.primaryHex.replace(/^#/, '');
-  }
 };
 
 
@@ -1745,120 +1523,72 @@ img{max-width:100%}blockquote{border-left:3px solid #ddd;margin-left:0;padding-l
     App.renderAll();
     Toast.show('Data cleared', 'success');
   },
-};
 
-
-/* ═══════════════════════════════════════════════════════════════════
-   §10b CRYPTO BACKUP — AES-256-GCM Zero-Knowledge Encryption
-   ═══════════════════════════════════════════════════════════════════ */
-
-const CryptoBackup = {
-  _str2ab(str) { return new TextEncoder().encode(str); },
-  _ab2b64(buf) {
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-    return btoa(binary);
-  },
-  _b642ab(b64) {
-    const binary = atob(b64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes.buffer;
-  },
-
-  async deriveKey(password, salt) {
+  async exportEncrypted() {
+    const password = prompt('Set export password (required):');
+    if (!password) return;
+    const data = JSON.stringify({
+      notes: Store.getNotes(), folders: Store.getFolders(),
+      countdowns: Store.getCountdowns(), exportedAt: new Date().toISOString(),
+    });
     const enc = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
-    );
-    return crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
-  },
-
-  async exportEncrypted(password) {
-    const payload = {
-      version: 1,
-      appName: 'aria.',
-      notes: Store.getNotes(),
-      folders: Store.getFolders(),
-      countdowns: Store.getCountdowns(),
-      streak: Streak.getData(),
-      settings: Store.getSettings(),
-      colorCustom: ColorEngine.getCustom(),
-      exportedAt: new Date().toISOString()
-    };
-
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const key = await this.deriveKey(password, salt);
-    const jsonStr = JSON.stringify(payload);
-    const encryptedBuf = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      this._str2ab(jsonStr)
+    const iv   = crypto.getRandomValues(new Uint8Array(12));
+    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
+      keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
     );
-
-    const backupObj = {
-      version: 1,
-      type: 'aria-encrypted-backup',
-      salt: this._ab2b64(salt),
-      iv: this._ab2b64(iv),
-      ciphertext: this._ab2b64(encryptedBuf),
-      exportedAt: new Date().toISOString()
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(data));
+    const toB64 = u8 => btoa(String.fromCharCode(...u8));
+    const payload = {
+      v: 1,
+      salt: toB64(salt), iv: toB64(iv), data: toB64(new Uint8Array(encrypted)),
     };
-
-    const ymd = new Date().toISOString().slice(0, 10);
-    IO._download(`aria_encrypted_backup_${ymd}.aria`, JSON.stringify(backupObj, null, 2), 'application/json');
-    Toast.show(I18n.t('backupExportSuccess'), 'success');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    this._download(`aria-backup-${dateStr}.aria.json`, JSON.stringify(payload), 'application/json');
+    Toast.show('Encrypted backup saved', 'success');
   },
 
-  async importEncrypted(fileContent, password) {
-    let backupObj;
+  async importEncrypted(file) {
+    const password = prompt('Enter backup password:');
+    if (!password) return;
     try {
-      backupObj = JSON.parse(fileContent);
-    } catch {
-      throw new Error('Invalid JSON');
-    }
-
-    if (backupObj.type !== 'aria-encrypted-backup') {
-      throw new Error('Invalid backup type');
-    }
-
-    const salt = new Uint8Array(this._b642ab(backupObj.salt));
-    const iv = new Uint8Array(this._b642ab(backupObj.iv));
-    const ciphertext = this._b642ab(backupObj.ciphertext);
-    const key = await this.deriveKey(password, salt);
-
-    let decryptedBuf;
-    try {
-      decryptedBuf = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        ciphertext
+      const payload = JSON.parse(await file.text());
+      const enc = new TextEncoder();
+      const fromB64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+      const salt = fromB64(payload.salt);
+      const iv   = fromB64(payload.iv);
+      const encData = fromB64(payload.data);
+      const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
+        keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
       );
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encData);
+      const parsed = JSON.parse(new TextDecoder().decode(decrypted));
+      // Merge using same logic as importFile
+      if (Array.isArray(parsed.notes)) {
+        const existing = Store.getNotes();
+        const ids = new Set(existing.map(n => n.id));
+        Store.setNotes([...existing, ...parsed.notes.filter(n => !ids.has(n.id))]);
+      }
+      if (Array.isArray(parsed.folders)) {
+        const existing = Store.getFolders();
+        const ids = new Set(existing.map(f => f.id));
+        Store.setFolders([...existing, ...parsed.folders.filter(f => !ids.has(f.id))]);
+      }
+      if (Array.isArray(parsed.countdowns)) {
+        const existing = Store.getCountdowns();
+        const ids = new Set(existing.map(c => c.id));
+        Store.setCountdowns([...existing, ...parsed.countdowns.filter(c => !ids.has(c.id))]);
+      }
+      App.renderAll();
+      Toast.show('Backup restored successfully', 'success');
     } catch {
-      throw new Error(I18n.t('wrongPassword'));
+      Toast.show('Wrong password or corrupt backup file', 'error');
     }
-
-    const decStr = new TextDecoder().decode(decryptedBuf);
-    const data = JSON.parse(decStr);
-
-    if (data.notes) Store.setNotes(data.notes);
-    if (data.folders) Store.setFolders(data.folders);
-    if (data.countdowns) Store.setCountdowns(data.countdowns);
-    if (data.streak) Streak.saveData(data.streak);
-    if (data.settings) Store.saveSettings(data.settings);
-    if (data.colorCustom) ColorEngine.saveCustom(data.colorCustom);
-
-    App.init();
-    Toast.show(I18n.t('backupImportSuccess'), 'success');
-  }
+  },
 };
 
 
@@ -1877,8 +1607,9 @@ const App = {
     const settings = Store.getSettings();
     I18n.lang = settings.language;
     I18n.apply();
-    ColorEngine.apply();
-    Appearance.applyFont(settings.font, settings.customFontFamily);
+    ColorEngine.applyPalette(settings.themeHue ?? 142, settings.themeSat ?? 22, settings.themeDark ?? false, false);
+    ColorEngine.renderPresets();
+    Appearance.applyFont(settings.font, settings.customFont);
     Appearance.applyFontSize(settings.fontSize);
     Appearance.applyEditorWidth(settings.editorWidth);
 
@@ -1895,7 +1626,7 @@ const App = {
 
     // 4. Editor resize & initial state
     Editor.initResize();
-    Editor.setViewMode('live');
+    Editor.setViewMode('edit');
     const notes = Store.getNotes();
     if (notes.length > 0) {
       Editor.open(notes[0].id);
@@ -2038,15 +1769,11 @@ const App = {
     // Active lang option
     document.querySelectorAll('.lang-option').forEach(opt =>
       opt.classList.toggle('active', opt.dataset.lang === settings.language));
-
     // Custom font input
-    if (settings.font === 'custom') {
-      const customInput = document.getElementById('custom-font-input');
-      if (customInput) customInput.value = settings.customFontFamily || '';
-      const customWrapper = document.getElementById('custom-font-wrapper');
-      if (customWrapper) customWrapper.style.display = 'block';
-    }
-    ColorEngine.renderSettingsUI();
+    const customFontEl = document.getElementById('custom-font-input');
+    if (customFontEl && settings.customFont) customFontEl.value = settings.customFont;
+    // Color engine sync
+    ColorEngine._syncUI(settings.themeHue ?? 142, settings.themeSat ?? 22, settings.themeDark ?? false);
   },
 
   // ── Event binding ────────────────────────────────────────────────
@@ -2150,8 +1877,11 @@ const App = {
       });
     });
 
-    // --- Theme toggle ---
-    document.getElementById('btn-theme')?.addEventListener('click', () => Appearance.toggleTheme());
+    // --- Theme toggle (dark/light quick toggle) ---
+    document.getElementById('btn-theme')?.addEventListener('click', () => ColorEngine.toggleDark());
+
+    // --- Color Engine (settings panel) ---
+    ColorEngine.bindColorEngine();
 
     // --- Font cycle (status bar) ---
     document.getElementById('btn-font-switch')?.addEventListener('click', () => Appearance.cycleFont());
@@ -2226,67 +1956,14 @@ const App = {
       else GitHubSync.stopAutoSync();
     });
 
-    // --- Live Editor Input ---
-    Editor.el.liveEditor?.addEventListener('input', () => {
-      Editor.syncFromLive();
-    });
-
-    // Custom Font Input
-    document.getElementById('custom-font-input')?.addEventListener('input', (e) => {
-      Appearance.applyFont('custom', e.target.value.trim());
+    // Theme options (old theme-card — no longer rendered, safe no-op)
+    document.querySelectorAll('.theme-card').forEach(card => {
+      card.addEventListener('click', () => {});
     });
 
     // Font options in settings
     document.querySelectorAll('.font-option').forEach(opt => {
-      opt.addEventListener('click', () => {
-        const font = opt.dataset.font;
-        const customFamily = document.getElementById('custom-font-input')?.value.trim() || '';
-        Appearance.applyFont(font, customFamily);
-      });
-    });
-
-    // --- Color Engine Controls ---
-    document.getElementById('hue-slider')?.addEventListener('input', (e) => {
-      const h = parseInt(e.target.value, 10);
-      const sat = parseInt(document.getElementById('sat-slider')?.value || '22', 10);
-      const hex = ColorEngine.hsl2hex(h, sat, 45);
-      ColorEngine.setPrimary(hex);
-    });
-
-    document.getElementById('sat-slider')?.addEventListener('input', (e) => {
-      const sat = parseInt(e.target.value, 10);
-      const h = parseInt(document.getElementById('hue-slider')?.value || '142', 10);
-      const hex = ColorEngine.hsl2hex(h, sat, 45);
-      ColorEngine.setPrimary(hex);
-    });
-
-    document.getElementById('dark-mode-toggle')?.addEventListener('change', (e) => {
-      ColorEngine.setDarkMode(e.target.checked);
-    });
-
-    document.getElementById('btn-unlock-rgb')?.addEventListener('click', () => {
-      ColorEngine.toggleLock();
-    });
-
-    document.getElementById('btn-reset-color')?.addEventListener('click', () => {
-      ColorEngine.setPrimary('#7C9885');
-    });
-
-    ['rgb-r', 'rgb-g', 'rgb-b'].forEach(id => {
-      document.getElementById(id)?.addEventListener('input', () => {
-        const r = parseInt(document.getElementById('rgb-r').value, 10);
-        const g = parseInt(document.getElementById('rgb-g').value, 10);
-        const b = parseInt(document.getElementById('rgb-b').value, 10);
-        const hex = ColorEngine.rgb2hex(r, g, b);
-        ColorEngine.setPrimary(hex);
-      });
-    });
-
-    document.getElementById('color-hex')?.addEventListener('change', (e) => {
-      let val = e.target.value.trim().replace(/^#/, '');
-      if (/^[0-9a-fA-F]{6}$/.test(val)) {
-        ColorEngine.setPrimary('#' + val);
-      }
+      opt.addEventListener('click', () => Appearance.applyFont(opt.dataset.font));
     });
 
     // Language options in settings
@@ -2314,6 +1991,7 @@ const App = {
     document.getElementById('btn-export-md')?.addEventListener('click', () => IO.exportMd());
     document.getElementById('btn-export-html')?.addEventListener('click', () => IO.exportHtml());
     document.getElementById('btn-export-all')?.addEventListener('click', () => IO.exportAll());
+    document.getElementById('btn-export-encrypted')?.addEventListener('click', () => IO.exportEncrypted());
     document.getElementById('btn-import')?.addEventListener('click', () => {
       document.getElementById('file-import')?.click();
     });
@@ -2322,81 +2000,20 @@ const App = {
       if (file) IO.importFile(file);
       e.target.value = ''; // Reset for re-import
     });
-    document.getElementById('btn-clear-data')?.addEventListener('click', () => IO.clearAll());
-
-    // --- Encrypted Backup Export & Import ---
-    let cryptoAction = null; // 'export' | 'import'
-    let cryptoImportPayload = null;
-
-    document.getElementById('btn-export-encrypted')?.addEventListener('click', () => {
-      cryptoAction = 'export';
-      const modal = document.getElementById('crypto-modal');
-      const title = document.getElementById('crypto-modal-title');
-      const confirmGroup = document.getElementById('crypto-confirm-group');
-      const pwd = document.getElementById('crypto-password');
-      const confirmPwd = document.getElementById('crypto-confirm');
-      if (title) title.textContent = I18n.t('exportEncrypted');
-      if (confirmGroup) confirmGroup.style.display = 'block';
-      if (pwd) pwd.value = '';
-      if (confirmPwd) confirmPwd.value = '';
-      modal?.classList.add('active');
-      pwd?.focus();
-    });
-
     document.getElementById('btn-import-encrypted')?.addEventListener('click', () => {
-      document.getElementById('file-import-crypto')?.click();
+      document.getElementById('file-import-encrypted')?.click();
     });
-
-    document.getElementById('file-import-crypto')?.addEventListener('change', (e) => {
+    document.getElementById('file-import-encrypted')?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        cryptoImportPayload = ev.target.result;
-        cryptoAction = 'import';
-        const modal = document.getElementById('crypto-modal');
-        const title = document.getElementById('crypto-modal-title');
-        const confirmGroup = document.getElementById('crypto-confirm-group');
-        const pwd = document.getElementById('crypto-password');
-        if (title) title.textContent = I18n.t('importEncrypted');
-        if (confirmGroup) confirmGroup.style.display = 'none';
-        if (pwd) pwd.value = '';
-        modal?.classList.add('active');
-        pwd?.focus();
-      };
-      reader.readAsText(file);
+      if (file) IO.importEncrypted(file);
       e.target.value = '';
     });
+    document.getElementById('btn-clear-data')?.addEventListener('click', () => IO.clearAll());
 
-    document.getElementById('btn-crypto-submit')?.addEventListener('click', async () => {
-      const pwd = document.getElementById('crypto-password')?.value || '';
-      const confirmPwd = document.getElementById('crypto-confirm')?.value || '';
-      const modal = document.getElementById('crypto-modal');
-
-      if (!pwd) {
-        Toast.show(I18n.t('passwordEmpty'), 'error');
-        return;
-      }
-
-      if (cryptoAction === 'export') {
-        if (pwd !== confirmPwd) {
-          Toast.show(I18n.t('passwordMismatch'), 'error');
-          return;
-        }
-        try {
-          await CryptoBackup.exportEncrypted(pwd);
-          modal?.classList.remove('active');
-        } catch (err) {
-          Toast.show(err.message, 'error');
-        }
-      } else if (cryptoAction === 'import') {
-        try {
-          await CryptoBackup.importEncrypted(cryptoImportPayload, pwd);
-          modal?.classList.remove('active');
-        } catch (err) {
-          Toast.show(err.message, 'error');
-        }
-      }
+    // --- Custom font ---
+    document.getElementById('btn-apply-custom-font')?.addEventListener('click', () => {
+      const name = document.getElementById('custom-font-input')?.value.trim();
+      if (name) Appearance.applyFont('custom', name);
     });
 
     // --- Close modals on Escape ---

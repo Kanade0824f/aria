@@ -2174,153 +2174,56 @@ img {
    ------------------------------------------------------------ */
 
 [data-font="sans"] .editor-textarea,
-[data-font="sans"] .live-editor,
 [data-font="sans"] .preview-content {
   font-family: var(--font-sans);
 }
 
 [data-font="serif"] .editor-textarea,
-[data-font="serif"] .live-editor,
 [data-font="serif"] .preview-content {
   font-family: var(--font-serif);
 }
 
 [data-font="mono"] .editor-textarea,
-[data-font="mono"] .live-editor,
 [data-font="mono"] .preview-content {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
 }
 
 [data-font="literary"] .editor-textarea,
-[data-font="literary"] .live-editor,
 [data-font="literary"] .preview-content {
   font-family: var(--font-literary);
   font-size: calc(var(--font-size-md) + 1px);
   line-height: 1.8;
 }
 
-[data-font="custom"] body,
-[data-font="custom"] .app,
 [data-font="custom"] .editor-textarea,
-[data-font="custom"] .live-editor,
 [data-font="custom"] .preview-content {
-  font-family: var(--font-custom), var(--font-sans);
+  font-family: var(--font-custom, var(--font-sans));
 }
 
-/* Code elements ALWAYS use dedicated monospace font stack */
-code, pre, pre code, .hljs, kbd, samp, .math-raw-input, .math-delim {
-  font-family: var(--font-mono) !important;
-  font-size: 0.9em;
-  letter-spacing: -0.2px;
-}
-
-pre code {
-  font-size: 0.88em;
-  line-height: 1.6;
-}
-
-/* Math elements ALWAYS use KaTeX mathematical serif font stack */
-.katex, .katex-display, .katex * {
-  font-family: KaTeX_Main, KaTeX_Math, 'Times New Roman', serif !important;
-}
-
-.katex {
-  font-size: 1.05em !important;
-}
-
-.katex-display {
-  margin: var(--sp-4) 0 !important;
-  padding: var(--sp-2) 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-/* Live Editor Pane & Interactive Math Boxes */
-.live-editor {
-  flex: 1;
-  height: 100%;
-  padding: var(--sp-8);
-  overflow-y: auto;
-  outline: none;
-  background-color: var(--bg);
-  color: var(--text);
-  line-height: var(--line-height);
-  font-size: var(--editor-font-size, 15px);
-  max-width: var(--editor-max-width, 800px);
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.live-editor:empty:before {
-  content: attr(data-placeholder);
-  color: var(--text-tertiary);
-  pointer-events: none;
-}
-
-.math-live-box {
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-  border-radius: var(--border-radius-sm);
-  padding: 1px 4px;
-  margin: 0 1px;
-  vertical-align: middle;
-  cursor: pointer;
-  border: 1px dashed transparent;
-  transition: border-color var(--duration-fast) var(--ease-out),
-              background-color var(--duration-fast) var(--ease-out);
-}
-
-.math-live-box:hover {
-  border-color: var(--border);
-  background-color: var(--accent-light);
-}
-
-.math-live-box.editing,
-.math-live-box:focus {
-  border-color: var(--accent);
-  background-color: var(--accent-light);
-  box-shadow: 0 0 0 2px var(--accent-light);
-  outline: none;
-}
-
-.math-live-box.block {
+/* Custom font row */
+.custom-font-row {
   display: flex;
-  justify-content: center;
-  width: 100%;
-  margin: var(--sp-3) 0;
-  padding: var(--sp-2) var(--sp-4);
-}
-
-.math-editor {
-  display: inline-flex;
+  gap: var(--sp-2);
   align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--accent);
-  border-radius: var(--border-radius-sm);
-  padding: 2px 6px;
-  box-shadow: var(--shadow-sm);
+}
+.custom-font-row .setting-input {
+  flex: 1;
+  min-width: 0;
 }
 
-.math-delim {
-  color: var(--accent);
-  font-weight: 600;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  user-select: none;
+/* Code & math always use mono — never overridden by prose font choice */
+.editor-textarea code,
+.preview-content code,
+.preview-content pre,
+.preview-content pre code,
+.markdown-body code,
+.markdown-body pre code {
+  font-family: var(--font-mono) !important;
 }
 
-.math-raw-input {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--text);
-  background: transparent;
-  border: none;
-  outline: none;
-  padding: 0 4px;
-  min-width: 60px;
+.katex, .katex-display {
+  font-family: KaTeX_Main, 'Times New Roman', serif !important;
 }
 
 
