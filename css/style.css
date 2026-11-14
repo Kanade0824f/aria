@@ -960,6 +960,7 @@ img {
 .editor-pane {
   flex: 1;
   display: flex;
+  position: relative;    /* anchor for overlay */
   min-width: 0;
   overflow: hidden;
 }
@@ -975,10 +976,66 @@ img {
   background-color: transparent;
   tab-size: 2;
   overflow-y: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .editor-textarea::placeholder {
   color: var(--text-tertiary);
+}
+
+/* ── Typora-style Live Overlay ──────────────────────────────────────
+   The overlay mirrors the textarea geometry and renders HTML on top.
+   In "typora" mode the textarea becomes transparent (caret visible)
+   and the overlay absorbs pointer events for click-to-edit.
+   ─────────────────────────────────────────────────────────────────── */
+.typora-overlay {
+  position: absolute;
+  inset: 0;
+  padding: var(--sp-6);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: none;   /* invisible while NOT in typora mode */
+  opacity: 0;
+  z-index: 2;
+  background: transparent;
+  transition: opacity 150ms ease;
+  /* Scroll sync'd via JS */
+}
+
+/* When Typora mode is active on the pane */
+.editor-pane.typora-active .typora-overlay {
+  pointer-events: auto;
+  opacity: 1;
+  background: var(--bg);
+}
+
+.editor-pane.typora-active .editor-textarea {
+  color: transparent;
+  caret-color: var(--text);  /* keep cursor visible */
+}
+
+/* Rendered blocks in overlay get a hover ring to invite click */
+.typora-overlay p,
+.typora-overlay h1, .typora-overlay h2, .typora-overlay h3,
+.typora-overlay h4, .typora-overlay h5, .typora-overlay h6,
+.typora-overlay ul, .typora-overlay ol,
+.typora-overlay blockquote, .typora-overlay pre,
+.typora-overlay table, .typora-overlay .katex-display {
+  cursor: text;
+  border-radius: 3px;
+  transition: outline 100ms ease;
+  outline: 2px solid transparent;
+}
+.typora-overlay p:hover,
+.typora-overlay h1:hover, .typora-overlay h2:hover, .typora-overlay h3:hover,
+.typora-overlay h4:hover, .typora-overlay h5:hover, .typora-overlay h6:hover,
+.typora-overlay ul:hover, .typora-overlay ol:hover,
+.typora-overlay blockquote:hover, .typora-overlay pre:hover,
+.typora-overlay table:hover, .typora-overlay .katex-display:hover {
+  outline-color: var(--accent-light);
 }
 
 /* Resize handle */

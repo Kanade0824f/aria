@@ -501,6 +501,9 @@ const Editor = {
     this.updatePreview();
     this.showEditor(true);
 
+    // Trigger Typora re-render for new note
+    if (typeof TyporaMode !== 'undefined') TyporaMode.scheduleRender(300);
+
     // Mark active in sidebar
     document.querySelectorAll('.note-item').forEach(el => el.classList.toggle('active', el.dataset.id === noteId));
   },
@@ -648,6 +651,7 @@ const Editor = {
     this.updateCharCount();
     this.scheduleSave();
     if (this.viewMode !== 'edit') this.schedulePreview();
+    TyporaMode.scheduleRender();
   },
 
   // ── Resize handle for split view ─────────────────────────────────
@@ -679,6 +683,156 @@ const Editor = {
   },
 };
 
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   §4b  TYPORA MODE — Inline live rendering over textarea
+   ═══════════════════════════════════════════════════════════════════ */
+
+const TyporaMode = {
+  _renderTimer: null,
+  _reactivateTimer: null,
+  _active: false,
+
+  get _pane()    { return document.getElementById('editor-pane'); },
+  get _overlay() { return document.getElementById('typora-overlay'); },
+  get _ta()      { return Editor.el.editor; },
+
+  scheduleRender(delay) {
+    delay = delay === undefined ? 400 : delay;
+    clearTimeout(this._renderTimer);
+    this._renderTimer = setTimeout(() => this._render(), delay);
+  },
+
+  deactivate() {
+    this._active = false;
+    this._pane && this._pane.classList.remove('typora-active');
+    clearTimeout(this._reactivateTimer);
+    this._reactivateTimer = setTimeout(() => this.scheduleRender(0), 1200);
+  },
+
+  _render() {
+    const ta = this._ta;
+    const overlay = this._overlay;
+    if (!ta || !overlay) return;
+    if (!ta.value.trim()) {
+      this._active = false;
+      this._pane && this._pane.classList.remove('typora-active');
+      return;
+    }
+    overlay.innerHTML = this._renderAnnotated(ta.value);
+    overlay.scrollTop = ta.scrollTop;
+    this._active = true;
+    this._pane && this._pane.classList.add('typora-active');
+    this._bindBlockClicks();
+  },
+
+  _renderAnnotated(md) {
+    const lines = md.split('\n');
+    const MARK = '%%TY_LINE_';
+    let src = '';
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Fenced code block
+      if (/^```/.test(line)) {
+        src += '\n' + MARK + i + '%%\n' + line + '\n'; i++;
+        while (i < lines.length && !/^```/.test(lines[i])) { src += lines[i] + '\n'; i++; }
+        if (i < lines.length) { src += lines[i] + '\n'; i++; }
+        continue;
+      }
+      // Block math $
+      if (/^$/.test(line)) {
+        src += '\n' + MARK + i + '%%\n' + line + '\n'; i++;
+        while (i < lines.length && !/^$/.test(lines[i])) { src += lines[i] + '\n'; i++; }
+        if (i < lines.length) { src += lines[i] + '\n'; i++; }
+        continue;
+      }
+      // Heading
+      if (/^#{1,6}\s/.test(line)) { src += '\n' + MARK + i + '%%\n' + line + '\n'; i++; continue; }
+      // Blockquote
+      if (/^>/.test(line)) {
+        src += '\n' + MARK + i + '%%\n';
+        while (i < lines.length && /^>/.test(lines[i])) { src += lines[i] + '\n'; i++; }
+        continue;
+      }
+      // HR
+      if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) { src += '\n' + MARK + i + '%%\n' + line + '\n'; i++; continue; }
+      // List
+      if (/^(\s*[-*+]|\s*\d+\.)/.test(line)) {
+        src += '\n' + MARK + i + '%%\n';
+        while (i < lines.length && (/^(\s*[-*+]|\s*\d+\.)/.test(lines[i]) || (lines[i].length > 0 && /^\s+/.test(lines[i])))) {
+          src += lines[i] + '\n'; i++;
+        }
+        continue;
+      }
+      // Paragraph
+      if (line.trim()) {
+        src += '\n' + MARK + i + '%%\n';
+        while (i < lines.length && lines[i].trim()) { src += lines[i] + '\n'; i++; }
+        continue;
+      }
+      src += '\n'; i++;
+    }
+
+    let html = Renderer.render(src);
+    // Inject data-line onto next block element after marker paragraphs
+    html = html.replace(/<p>%%TY_LINE_(\d+)%%<\/p>\s*(<[a-zA-Z][^>]*)/g, function(_, ln, tag) {
+      return tag + ' data-line="' + ln + '"';
+    });
+    html = html.replace(/<p>%%TY_LINE_\d+%%<\/p>/g, '');
+    return html;
+  },
+
+  _bindBlockClicks() {
+    const overlay = this._overlay;
+    if (!overlay) return;
+    overlay.querySelectorAll('[data-line]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._jumpToLine(parseInt(el.dataset.line, 10));
+      });
+    });
+    overlay.addEventListener('click', () => { if (this._active) this.deactivate(); }, { once: true });
+  },
+
+  _jumpToLine(lineNum) {
+    const ta = this._ta;
+    if (!ta) return;
+    const lines = ta.value.split('\n');
+    let pos = 0;
+    for (let i = 0; i < Math.min(lineNum, lines.length); i++) pos += lines[i].length + 1;
+    this.deactivate();
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = pos;
+  },
+
+  handleKeydown(e) {
+    // Any edit key → hide overlay, schedule re-render
+    const editKeys = new Set(['Enter','Backspace','Delete','Tab']);
+    if (this._active && (e.key.length === 1 || editKeys.has(e.key))) {
+      this._active = false;
+      this._pane && this._pane.classList.remove('typora-active');
+      this.scheduleRender(500);
+    }
+  },
+
+  handleScroll() {
+    if (this._active && this._overlay && this._ta) {
+      this._overlay.scrollTop = this._ta.scrollTop;
+    }
+  },
+
+  init() {
+    const ta = this._ta;
+    if (!ta) return;
+    ta.addEventListener('keydown', (e) => this.handleKeydown(e));
+    ta.addEventListener('scroll', () => this.handleScroll(), { passive: true });
+    setTimeout(() => this._render(), 500);
+  },
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    §5  GITHUB SYNC — Gist-based backup & restore
@@ -1633,6 +1787,9 @@ const App = {
     } else {
       Editor.showEditor(false);
     }
+
+    // 4b. Typora live render
+    TyporaMode.init();
 
     // 5. Countdowns tick
     CountdownManager.startTick();
