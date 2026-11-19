@@ -69,10 +69,10 @@ const IDB = (() => {
   async function restoreIfNeeded(keys) {
     for (const key of keys) {
       const ls = localStorage.getItem(key);
-      if (!ls || ls === '[]' || ls === 'null') {
+      if (ls === null || ls === undefined) {
         try {
           const val = await get(key);
-          if (val && val !== '[]' && val !== 'null') {
+          if (val && val !== 'null') {
             localStorage.setItem(key, val);
             console.info('[aria] Restored', key, 'from IndexedDB');
           }
@@ -96,6 +96,7 @@ const Store = {
     folders: 'aria_folders',
     countdowns: 'aria_countdowns',
     settings: 'aria_settings',
+    initialized: 'aria_initialized',
   },
 
   /** Generate a UUID v4 */
@@ -213,7 +214,21 @@ const Store = {
   },
 
   seedIfEmpty() {
-    if (this.getNotes().length > 0) return;
+    // If the app was already initialized on this browser, NEVER seed again
+    if (localStorage.getItem(this.KEYS.initialized)) return;
+
+    // If notes, folders, or countdowns already exist, mark initialized and exit
+    if (localStorage.getItem(this.KEYS.notes) !== null ||
+        localStorage.getItem(this.KEYS.countdowns) !== null ||
+        this.getNotes().length > 0) {
+      localStorage.setItem(this.KEYS.initialized, 'true');
+      IDB.mirror(this.KEYS.initialized, 'true');
+      return;
+    }
+
+    // Truly the first time ever loading the app on a fresh device:
+    localStorage.setItem(this.KEYS.initialized, 'true');
+    IDB.mirror(this.KEYS.initialized, 'true');
 
     const welcomeContent = `# 歡迎使用 aria.
 
@@ -1243,8 +1258,16 @@ const ContextMenu = {
           Store.deleteNote(id);
           App.renderNotesList();
           if (Editor.currentNoteId === id) {
-            Editor.currentNoteId = null;
-            Editor.showEditor(false);
+            clearTimeout(Editor._saveTimer);
+            const remaining = Store.getNotes();
+            if (remaining.length > 0) {
+              Editor.open(remaining[0].id);
+            } else {
+              Editor.currentNoteId = null;
+              if (Editor.el.title) Editor.el.title.value = '';
+              if (Editor.el.editor) Editor.el.editor.value = '';
+              Editor.showEditor(false);
+            }
           }
         }
         break;
@@ -1753,16 +1776,15 @@ img{max-width:100%}blockquote{border-left:3px solid #ddd;margin-left:0;padding-l
 
   clearAll() {
     if (!confirm(I18n.t('clearConfirm'))) return;
-    // Clear localStorage
-    localStorage.removeItem(Store.KEYS.notes);
-    localStorage.removeItem(Store.KEYS.folders);
-    localStorage.removeItem(Store.KEYS.countdowns);
-    // Also wipe IDB shadow-copies so they don't restore deleted data
-    const emptyJson = '[]';
-    IDB.mirror(Store.KEYS.notes, emptyJson);
-    IDB.mirror(Store.KEYS.folders, emptyJson);
-    IDB.mirror(Store.KEYS.countdowns, emptyJson);
+    clearTimeout(Editor._saveTimer);
+    Store.setNotes([]);
+    Store.setFolders([]);
+    Store.setCountdowns([]);
+    localStorage.setItem(Store.KEYS.initialized, 'true');
+    IDB.mirror(Store.KEYS.initialized, 'true');
     Editor.currentNoteId = null;
+    if (Editor.el.title) Editor.el.title.value = '';
+    if (Editor.el.editor) Editor.el.editor.value = '';
     Editor.showEditor(false);
     App.renderAll();
     Toast.show('Data cleared', 'success');
@@ -1857,13 +1879,11 @@ const App = {
       }
     })();
 
-    // 0b. IDB restore: ONLY if localStorage key is completely absent (=== null).
-    // If key exists but is '[]', the user intentionally cleared it — do NOT restore.
-    const _allKeys = Object.values(Store.KEYS);
-    const _needsRestore = _allKeys
-      .filter(k => k !== Store.KEYS.settings)
-      .some(k => localStorage.getItem(k) === null);   // null = key missing, not user-cleared
+    // 0b. IDB restore: if localStorage was wiped by browser, recover from IndexedDB shadow-copy
+    const _needsRestore = localStorage.getItem(Store.KEYS.notes) === null &&
+                          localStorage.getItem(Store.KEYS.initialized) === null;
     if (_needsRestore) {
+      const _allKeys = Object.values(Store.KEYS);
       IDB.restoreIfNeeded(_allKeys).then(() => {
         if (Store.getNotes().length > 0) {
           this.renderAll();
