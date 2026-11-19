@@ -1753,9 +1753,15 @@ img{max-width:100%}blockquote{border-left:3px solid #ddd;margin-left:0;padding-l
 
   clearAll() {
     if (!confirm(I18n.t('clearConfirm'))) return;
+    // Clear localStorage
     localStorage.removeItem(Store.KEYS.notes);
     localStorage.removeItem(Store.KEYS.folders);
     localStorage.removeItem(Store.KEYS.countdowns);
+    // Also wipe IDB shadow-copies so they don't restore deleted data
+    const emptyJson = '[]';
+    IDB.mirror(Store.KEYS.notes, emptyJson);
+    IDB.mirror(Store.KEYS.folders, emptyJson);
+    IDB.mirror(Store.KEYS.countdowns, emptyJson);
     Editor.currentNoteId = null;
     Editor.showEditor(false);
     App.renderAll();
@@ -1851,12 +1857,12 @@ const App = {
       }
     })();
 
-    // 0b. IDB restore: if localStorage was wiped, recover from IndexedDB shadow-copy
+    // 0b. IDB restore: ONLY if localStorage key is completely absent (=== null).
+    // If key exists but is '[]', the user intentionally cleared it — do NOT restore.
     const _allKeys = Object.values(Store.KEYS);
-    const _needsRestore = _allKeys.some(k => {
-      const v = localStorage.getItem(k);
-      return (!v || v === '[]' || v === 'null') && k !== Store.KEYS.settings;
-    });
+    const _needsRestore = _allKeys
+      .filter(k => k !== Store.KEYS.settings)
+      .some(k => localStorage.getItem(k) === null);   // null = key missing, not user-cleared
     if (_needsRestore) {
       IDB.restoreIfNeeded(_allKeys).then(() => {
         if (Store.getNotes().length > 0) {
