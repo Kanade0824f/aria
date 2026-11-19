@@ -17,6 +17,75 @@
  */
 
 /* ═══════════════════════════════════════════════════════════════════
+   §0  IDB BACKUP — IndexedDB shadow-copy of localStorage notes
+       Runs silently in parallel. On load, if localStorage is empty
+       but IDB has data, it auto-restores.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const IDB = (() => {
+  const DB_NAME = 'aria_db';
+  const DB_VER  = 1;
+  const STORE   = 'kv';
+  let _db = null;
+
+  function open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
+      req.onsuccess  = e => { _db = e.target.result; resolve(_db); };
+      req.onerror    = e => reject(e.target.error);
+    });
+  }
+
+  async function set(key, value) {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(value, key);
+      tx.oncomplete = resolve;
+      tx.onerror    = e => reject(e.target.error);
+    });
+  }
+
+  async function get(key) {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  /** Mirror a localStorage write to IDB (fire-and-forget) */
+  function mirror(key, jsonString) {
+    set(key, jsonString).catch(() => {});
+  }
+
+  /**
+   * Restore: for each aria_ key, if localStorage is missing/empty
+   * but IDB has a value, copy IDB → localStorage.
+   */
+  async function restoreIfNeeded(keys) {
+    for (const key of keys) {
+      const ls = localStorage.getItem(key);
+      if (!ls || ls === '[]' || ls === 'null') {
+        try {
+          const val = await get(key);
+          if (val && val !== '[]' && val !== 'null') {
+            localStorage.setItem(key, val);
+            console.info('[aria] Restored', key, 'from IndexedDB');
+          }
+        } catch {}
+      }
+    }
+  }
+
+  return { mirror, restoreIfNeeded };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════
    §1  STORE — Data persistence via localStorage
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -43,7 +112,11 @@ const Store = {
     try { return JSON.parse(localStorage.getItem(key)) || []; }
     catch { return []; }
   },
-  _set(key, data) { localStorage.setItem(key, JSON.stringify(data)); },
+  _set(key, data) {
+    const json = JSON.stringify(data);
+    localStorage.setItem(key, json);
+    IDB.mirror(key, json);   // shadow-copy to IndexedDB
+  },
 
   // ── Notes ─────────────────────────────────────────────────────────
   getNotes()        { return this._get(this.KEYS.notes); },
@@ -1778,6 +1851,22 @@ const App = {
       }
     })();
 
+    // 0b. IDB restore: if localStorage was wiped, recover from IndexedDB shadow-copy
+    const _allKeys = Object.values(Store.KEYS);
+    const _needsRestore = _allKeys.some(k => {
+      const v = localStorage.getItem(k);
+      return (!v || v === '[]' || v === 'null') && k !== Store.KEYS.settings;
+    });
+    if (_needsRestore) {
+      IDB.restoreIfNeeded(_allKeys).then(() => {
+        if (Store.getNotes().length > 0) {
+          this.renderAll();
+          Editor.open(Store.getNotes()[0].id);
+          Toast.show('Notes restored from backup', 'success', 3000);
+        }
+      }).catch(() => {});
+    }
+
     // 1. Load settings & apply
     const settings = Store.getSettings();
     I18n.lang = settings.language;
@@ -2242,3 +2331,11 @@ const App = {
    ═══════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => App.init());
+
+// Force-save any pending edits before the tab closes / refreshes
+window.addEventListener('beforeunload', () => {
+  if (Editor.currentNoteId && Editor._saveTimer) {
+    clearTimeout(Editor._saveTimer);
+    Editor.save();
+  }
+});
