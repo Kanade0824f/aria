@@ -778,7 +778,8 @@ const Editor = {
 
 const TyporaMode = {
   _active: false,
-  _editing: false,   // true while a block mini-editor is open
+  _editing: false,
+  _renderTimer: null,   // pending re-render after block close
 
   get _pane()    { return document.getElementById('editor-pane'); },
   get _overlay() { return document.getElementById('typora-overlay'); },
@@ -877,11 +878,11 @@ const TyporaMode = {
     const overlay = this._overlay;
     if (!overlay) return;
     const els = overlay.querySelectorAll('[data-line]');
-    console.log('[Typora] bindBlockClicks: found', els.length, 'blocks');
     els.forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        console.log('[Typora] block clicked, startLine=', el.dataset.line, 'endLine=', el.dataset.end);
+        // Cancel pending re-render so switching blocks is instant
+        if (this._renderTimer) { clearTimeout(this._renderTimer); this._renderTimer = null; }
         this._openBlockEditor(el);
       });
     });
@@ -889,6 +890,10 @@ const TyporaMode = {
 
   /* ── Inline-edit a single block; overlay stays active ── */
   _openBlockEditor(blockEl) {
+    // Cancel any pending re-render from a previous block closing
+    if (this._renderTimer) { clearTimeout(this._renderTimer); this._renderTimer = null; }
+    this._editing = true;
+
     const startLine = parseInt(blockEl.dataset.line, 10);
     const ta = this._ta;
     if (!ta) return;
@@ -896,8 +901,6 @@ const TyporaMode = {
     const rawEndLine = parseInt(blockEl.dataset.end, 10);
     const endLine = isNaN(rawEndLine) ? startLine : rawEndLine;
     const rawText = lines.slice(startLine, endLine + 1).join('\n');
-
-    this._editing = true;              // ← guard against blur→activate re-render
 
     const wrap = document.createElement('div');
     wrap.className = 'block-inline-editor';
@@ -927,15 +930,14 @@ const TyporaMode = {
     });
 
     mini.addEventListener('blur', () => {
-      this._editing = false;           // ← release guard
-      // Fade the wrap out, then re-render
+      if (this._editing) return;  // Another block opened — skip re-render
       wrap.style.transition = 'opacity 180ms ease';
       wrap.style.opacity = '0';
-      setTimeout(() => this._render(), 180);
+      this._renderTimer = setTimeout(() => { this._renderTimer = null; this._render(); }, 180);
     });
 
     mini.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); mini.blur(); }
+      if (e.key === 'Escape') { e.preventDefault(); this._editing = false; mini.blur(); }
     });
   },
 
