@@ -682,7 +682,9 @@ const Editor = {
 
   // ── Toolbar actions ──────────────────────────────────────────────
   execAction(action) {
-    const ta = this.el.editor;
+    // If Typora mode has an active mini editor, target it instead
+    const typoraEditor = typeof TyporaMode !== 'undefined' && TyporaMode.getActiveEditor();
+    const ta = typoraEditor || this.el.editor;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
     const sel = ta.value.substring(start, end);
@@ -773,163 +775,374 @@ const Editor = {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   §4b  TYPORA MODE — Inline live rendering over textarea
+   §4b  TYPORA MODE — Per-block inline live rendering
+        Each markdown block renders independently. Click a block to
+        edit its raw source in a mini textarea; blur re-renders it.
+        The master <textarea#editor> stays hidden as source of truth.
    ═══════════════════════════════════════════════════════════════════ */
 
 const TyporaMode = {
   _active: false,
+  _blocks: [],           // { startLine, endLine, raw, el }
+  _editingIdx: -1,       // index of currently-editing block (-1 = none)
 
   get _pane()    { return document.getElementById('editor-pane'); },
   get _overlay() { return document.getElementById('typora-overlay'); },
   get _ta()      { return Editor.el.editor; },
 
-  /* ── Public: show overlay (called on textarea blur) ── */
-  activate() {
-    const ta = this._ta;
-    if (!ta || !ta.value.trim()) return;
-    this._render();
-  },
-
-  /* ── Public: hide overlay (called on textarea focus / keydown) ── */
-  deactivate() {
-    if (!this._active) return;
-    this._active = false;
-    this._pane && this._pane.classList.remove('typora-active');
-  },
-
-  /* ── Render markdown into overlay ── */
-  _render() {
-    const ta = this._ta;
-    const overlay = this._overlay;
-    if (!ta || !overlay || !ta.value.trim()) { this.deactivate(); return; }
-
-    overlay.innerHTML = this._renderAnnotated(ta.value);
-    overlay.scrollTop = ta.scrollTop;
-    this._active = true;
-    this._pane && this._pane.classList.add('typora-active');
-    this._bindBlockClicks();
-  },
-
-  /* ── Split into blocks, render each separately to avoid marker bleed ── */
-  _renderAnnotated(md) {
+  /* ── Block parsing: split markdown into structural blocks ── */
+  _parseBlocks(md) {
     const lines = md.split('\n');
     const blocks = [];
     let i = 0;
 
     while (i < lines.length) {
       const line = lines[i];
+      // Skip blank lines but track them: they belong to the gap between blocks
       if (!line.trim()) { i++; continue; }
       const startLine = i;
 
       // Fenced code block
       if (/^`{3,}/.test(line)) {
-        let text = line + '\n'; i++;
-        while (i < lines.length && !/^`{3,}/.test(lines[i])) { text += lines[i] + '\n'; i++; }
-        if (i < lines.length) { text += lines[i] + '\n'; i++; }
-        blocks.push({ startLine, text }); continue;
+        const parts = [line]; i++;
+        while (i < lines.length && !/^`{3,}/.test(lines[i])) { parts.push(lines[i]); i++; }
+        if (i < lines.length) { parts.push(lines[i]); i++; }
+        blocks.push({ startLine, endLine: i, raw: parts.join('\n') }); continue;
       }
       // Block math $$
       if (/^\$\$/.test(line)) {
-        let text = line + '\n'; i++;
-        while (i < lines.length && !/^\$\$/.test(lines[i])) { text += lines[i] + '\n'; i++; }
-        if (i < lines.length) { text += lines[i] + '\n'; i++; }
-        blocks.push({ startLine, text }); continue;
+        const parts = [line]; i++;
+        while (i < lines.length && !/^\$\$/.test(lines[i])) { parts.push(lines[i]); i++; }
+        if (i < lines.length) { parts.push(lines[i]); i++; }
+        blocks.push({ startLine, endLine: i, raw: parts.join('\n') }); continue;
       }
       // Heading
-      if (/^#{1,6}\s/.test(line)) { blocks.push({ startLine, text: line + '\n' }); i++; continue; }
+      if (/^#{1,6}\s/.test(line)) {
+        blocks.push({ startLine, endLine: i + 1, raw: line }); i++; continue;
+      }
       // Blockquote
       if (/^>/.test(line)) {
-        let text = '';
-        while (i < lines.length && /^>/.test(lines[i])) { text += lines[i] + '\n'; i++; }
-        blocks.push({ startLine, text }); continue;
+        const parts = [];
+        while (i < lines.length && /^>/.test(lines[i])) { parts.push(lines[i]); i++; }
+        blocks.push({ startLine, endLine: i, raw: parts.join('\n') }); continue;
       }
       // HR
       if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
-        blocks.push({ startLine, text: line + '\n' }); i++; continue;
+        blocks.push({ startLine, endLine: i + 1, raw: line }); i++; continue;
       }
-      // List
+      // List (including continuation lines indented 2+)
       if (/^(\s*[-*+]|\s*\d+\.)/.test(line)) {
-        let text = '';
+        const parts = [];
         while (i < lines.length && (/^(\s*[-*+]|\s*\d+\.)/.test(lines[i]) || (lines[i].length > 0 && /^\s{2,}/.test(lines[i])))) {
-          text += lines[i] + '\n'; i++;
+          parts.push(lines[i]); i++;
         }
-        blocks.push({ startLine, text }); continue;
+        blocks.push({ startLine, endLine: i, raw: parts.join('\n') }); continue;
       }
-      // Paragraph
-      let text = '';
-      while (i < lines.length && lines[i].trim()) { text += lines[i] + '\n'; i++; }
-      blocks.push({ startLine, text });
+      // Paragraph: contiguous non-blank lines
+      const parts = [];
+      while (i < lines.length && lines[i].trim()) { parts.push(lines[i]); i++; }
+      blocks.push({ startLine, endLine: i, raw: parts.join('\n') });
     }
-
-    return blocks.map(({ startLine, text }) => {
-      const html = Renderer.render(text.trim());
-      // Inject data-line onto first element tag
-      return html.replace(/^(\s*<[a-zA-Z][^>]*)/, (m, tag) =>
-        tag.includes('data-line') ? m : tag + ` data-line="${startLine}"`
-      );
-    }).join('\n');
+    return blocks;
   },
 
-  /* ── Bind click-to-edit on each rendered block ── */
-  _bindBlockClicks() {
+  /* ── Render a single block's raw markdown to HTML ── */
+  _renderBlockHTML(raw) {
+    return Renderer.render(raw.trim());
+  },
+
+  /* ── Build / rebuild the entire overlay ── */
+  _buildOverlay() {
+    const ta = this._ta;
     const overlay = this._overlay;
-    if (!overlay) return;
-    overlay.querySelectorAll('[data-line]').forEach(el => {
-      el.addEventListener('click', (e) => {
+    if (!ta || !overlay) return;
+
+    const md = ta.value;
+    if (!md.trim()) {
+      overlay.innerHTML = '';
+      this._blocks = [];
+      this._editingIdx = -1;
+      this._active = false;
+      this._pane && this._pane.classList.remove('typora-active');
+      return;
+    }
+
+    this._blocks = this._parseBlocks(md);
+    overlay.innerHTML = '';
+
+    this._blocks.forEach((block, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'typora-block';
+      wrapper.dataset.blockIdx = idx;
+      wrapper.innerHTML = this._renderBlockHTML(block.raw);
+      block.el = wrapper;
+      overlay.appendChild(wrapper);
+
+      // Click → enter edit mode for this block
+      wrapper.addEventListener('mousedown', (e) => {
+        // Don't intercept clicks on checkboxes or links
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'A') return;
+        e.preventDefault();
         e.stopPropagation();
-        this._jumpToLine(parseInt(el.dataset.line, 10));
+        this._editBlock(idx);
       });
+
+      // Bind checkbox toggles inside rendered blocks
+      wrapper.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        cb.addEventListener('change', () => {
+          this._toggleCheckboxInBlock(idx, cb);
+        });
+      });
+    });
+
+    this._active = true;
+    this._pane && this._pane.classList.add('typora-active');
+  },
+
+  /* ── Toggle checkbox within a block, sync to master textarea ── */
+  _toggleCheckboxInBlock(blockIdx, cb) {
+    const block = this._blocks[blockIdx];
+    if (!block) return;
+    const rawLines = block.raw.split('\n');
+    const checkboxes = [];
+    rawLines.forEach((l, li) => {
+      if (/^\s*[-*+]\s*\[([ xX])\]/.test(l)) checkboxes.push(li);
+    });
+    // Find which checkbox index was toggled
+    const allCBs = Array.from(block.el.querySelectorAll('input[type="checkbox"]'));
+    const cbIndex = allCBs.indexOf(cb);
+    if (cbIndex >= 0 && cbIndex < checkboxes.length) {
+      const lineIdx = checkboxes[cbIndex];
+      rawLines[lineIdx] = rawLines[lineIdx].replace(
+        /\[([ xX])\]/,
+        cb.checked ? '[x]' : '[ ]'
+      );
+      block.raw = rawLines.join('\n');
+      this._syncBlockToMaster(blockIdx);
+      // Re-render just this block
+      block.el.innerHTML = this._renderBlockHTML(block.raw);
+      block.el.querySelectorAll('input[type="checkbox"]').forEach(newCb => {
+        newCb.addEventListener('change', () => this._toggleCheckboxInBlock(blockIdx, newCb));
+      });
+    }
+  },
+
+  /* ── Enter edit mode for a specific block ── */
+  _editBlock(idx) {
+    // If already editing this block, do nothing
+    if (this._editingIdx === idx) return;
+
+    // Close any currently-editing block first
+    if (this._editingIdx >= 0) {
+      this._closeBlock(this._editingIdx);
+    }
+
+    const block = this._blocks[idx];
+    if (!block || !block.el) return;
+
+    this._editingIdx = idx;
+    block.el.classList.add('typora-editing');
+
+    // Create mini textarea
+    const mini = document.createElement('textarea');
+    mini.className = 'typora-block-editor';
+    mini.value = block.raw;
+    mini.spellcheck = false;
+
+    // Clear rendered content, insert editor
+    block.el.innerHTML = '';
+    block.el.appendChild(mini);
+
+    // Auto-size the textarea to content
+    this._autoSize(mini);
+
+    mini.focus();
+
+    // Listen for input to auto-resize
+    mini.addEventListener('input', () => {
+      this._autoSize(mini);
+    });
+
+    // Blur → close editing, re-render
+    mini.addEventListener('blur', () => {
+      // Delay slightly so clicks on other blocks register
+      setTimeout(() => this._closeBlock(idx), 60);
+    });
+
+    // Keyboard shortcuts inside the mini editor
+    mini.addEventListener('keydown', (e) => {
+      // Tab → indent
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = mini.selectionStart, end = mini.selectionEnd;
+        mini.setRangeText('  ', s, end, 'end');
+        this._autoSize(mini);
+        return;
+      }
+      // Ctrl+B, Ctrl+I, Ctrl+S
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'b') { e.preventDefault(); this._wrapSelection(mini, '**', '**'); return; }
+        if (e.key === 'i') { e.preventDefault(); this._wrapSelection(mini, '*', '*'); return; }
+        if (e.key === 's') { e.preventDefault(); this._closeBlock(idx); Editor.save(); return; }
+      }
+      // Escape → close block
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        mini.blur();
+      }
     });
   },
 
-  /* ── Jump cursor to source line, switch to edit mode ── */
-  _jumpToLine(lineNum) {
-    const ta = this._ta;
-    if (!ta) return;
-    const lines = ta.value.split('\n');
-    let pos = 0;
-    for (let i = 0; i < Math.min(lineNum, lines.length); i++) pos += lines[i].length + 1;
-    // focus triggers the focus-listener → deactivate overlay
-    ta.focus();
-    ta.selectionStart = ta.selectionEnd = pos;
+  /* ── Wrap selected text in mini textarea with before/after markers ── */
+  _wrapSelection(ta, before, after) {
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    const sel = ta.value.substring(s, e) || 'text';
+    ta.setRangeText(before + sel + after, s, e, 'select');
+    ta.selectionStart = s + before.length;
+    ta.selectionEnd = s + before.length + sel.length;
   },
 
-  /* ── Keep overlay scroll in sync ── */
-  handleScroll() {
-    if (this._active && this._overlay && this._ta) {
-      this._overlay.scrollTop = this._ta.scrollTop;
+  /* ── Auto-size a textarea to fit content ── */
+  _autoSize(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  },
+
+  /* ── Close editing on a specific block, re-render it ── */
+  _closeBlock(idx) {
+    const block = this._blocks[idx];
+    if (!block || !block.el) return;
+    if (!block.el.classList.contains('typora-editing')) return;
+
+    // Read the new raw content from the mini textarea
+    const mini = block.el.querySelector('.typora-block-editor');
+    if (mini) {
+      const newRaw = mini.value;
+      if (newRaw !== block.raw) {
+        block.raw = newRaw;
+        this._syncBlockToMaster(idx);
+        Editor.scheduleSave();
+      }
+    }
+
+    block.el.classList.remove('typora-editing');
+    this._editingIdx = -1;
+
+    // Re-render this block's HTML
+    if (!block.raw.trim()) {
+      // Block is empty — remove it and rebuild
+      this._rebuildFromMaster();
+      return;
+    }
+    block.el.innerHTML = this._renderBlockHTML(block.raw);
+
+    // Re-bind checkboxes
+    block.el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => this._toggleCheckboxInBlock(idx, cb));
+    });
+  },
+
+  /* ── Write a block's raw content back into the master textarea ── */
+  _syncBlockToMaster(idx) {
+    const ta = this._ta;
+    if (!ta) return;
+    const masterLines = ta.value.split('\n');
+    const block = this._blocks[idx];
+
+    // Replace lines [startLine, endLine) with block.raw
+    const newLines = block.raw.split('\n');
+    const oldCount = block.endLine - block.startLine;
+    masterLines.splice(block.startLine, oldCount, ...newLines);
+
+    ta.value = masterLines.join('\n');
+
+    // Update line ranges for subsequent blocks
+    const delta = newLines.length - oldCount;
+    block.endLine = block.startLine + newLines.length;
+    for (let i = idx + 1; i < this._blocks.length; i++) {
+      this._blocks[i].startLine += delta;
+      this._blocks[i].endLine += delta;
     }
   },
 
-  /* ── Init: wire blur/focus events ── */
+  /* ── Full rebuild from master textarea (after structural changes) ── */
+  _rebuildFromMaster() {
+    this._editingIdx = -1;
+    this._buildOverlay();
+  },
+
+  /* ── Public API ── */
+
+  activate() {
+    const ta = this._ta;
+    if (!ta || !ta.value.trim()) {
+      // Empty doc: clear overlay
+      const ov = this._overlay;
+      if (ov) ov.innerHTML = '';
+      this._active = false;
+      this._pane && this._pane.classList.remove('typora-active');
+      return;
+    }
+    this._buildOverlay();
+  },
+
+  deactivate() {
+    if (!this._active) return;
+    // Close any editing block
+    if (this._editingIdx >= 0) this._closeBlock(this._editingIdx);
+    this._active = false;
+    this._pane && this._pane.classList.remove('typora-active');
+  },
+
+  refresh() {
+    // Delay to let Editor.open() finish setting textarea value
+    setTimeout(() => this.activate(), 100);
+  },
+
+  handleScroll() {
+    // Overlay scrolls naturally now — no sync needed
+  },
+
+  /* ── Get the active mini textarea (for toolbar integration) ── */
+  getActiveEditor() {
+    if (this._editingIdx < 0) return null;
+    const block = this._blocks[this._editingIdx];
+    if (!block || !block.el) return null;
+    return block.el.querySelector('.typora-block-editor');
+  },
+
+  /* ── Init: set up overlay as the main editing surface ── */
   init() {
     const ta = this._ta;
     if (!ta) return;
 
-    // Textarea gains focus → show raw (hide overlay)
-    ta.addEventListener('focus', () => this.deactivate());
+    // Clicking empty area of overlay (not on a block) → add new block at end
+    this._overlay?.addEventListener('mousedown', (e) => {
+      if (e.target === this._overlay) {
+        // Focus master textarea at end so user can type
+        e.preventDefault();
+        // Close any editing block, rebuild, and open a new paragraph at end
+        if (this._editingIdx >= 0) this._closeBlock(this._editingIdx);
+        // Append newline to master if needed, rebuild, then edit last
+        if (ta.value && !ta.value.endsWith('\n\n')) {
+          ta.value += ta.value.endsWith('\n') ? '\n' : '\n\n';
+        }
+        ta.value += ' '; // placeholder space for new block
+        this._rebuildFromMaster();
+        if (this._blocks.length > 0) {
+          this._editBlock(this._blocks.length - 1);
+          // Clear the placeholder
+          const mini = this.getActiveEditor();
+          if (mini) { mini.value = ''; }
+        }
+      }
+    });
 
-    // Textarea loses focus → show overlay
-    // Small delay so a click on overlay registers before blur fires
-    ta.addEventListener('blur', () => setTimeout(() => {
-      // Only activate if focus didn't go into the overlay itself
-      if (document.activeElement !== ta) this.activate();
-    }, 80));
-
+    // Wire master textarea scroll (not really needed but harmless)
     ta.addEventListener('scroll', () => this.handleScroll(), { passive: true });
 
-    // Initial render (after first note loads, ta is not focused yet)
-    setTimeout(() => {
-      if (document.activeElement !== ta) this.activate();
-    }, 900);
-  },
-
-  /* ── Re-render overlay after note switch (called from Editor.open) ── */
-  refresh() {
-    // Slight delay to let Editor.open() finish setting textarea value
-    setTimeout(() => {
-      if (document.activeElement !== this._ta) this.activate();
-    }, 100);
+    // Initial render after first note loads
+    setTimeout(() => this.activate(), 900);
   },
 };
 
