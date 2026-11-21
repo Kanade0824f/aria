@@ -778,6 +778,7 @@ const Editor = {
 
 const TyporaMode = {
   _active: false,
+  _editing: false,   // true while a block mini-editor is open
 
   get _pane()    { return document.getElementById('editor-pane'); },
   get _overlay() { return document.getElementById('typora-overlay'); },
@@ -785,6 +786,7 @@ const TyporaMode = {
 
   /* ── Public: show overlay (called on textarea blur) ── */
   activate() {
+    if (this._editing) return;          // block editor open — don't re-render
     const ta = this._ta;
     if (!ta || !ta.value.trim()) return;
     this._render();
@@ -892,6 +894,8 @@ const TyporaMode = {
     const endLine = isNaN(rawEndLine) ? startLine : rawEndLine;
     const rawText = lines.slice(startLine, endLine + 1).join('\n');
 
+    this._editing = true;              // ← guard against blur→activate re-render
+
     const wrap = document.createElement('div');
     wrap.className = 'block-inline-editor';
     const mini = document.createElement('textarea');
@@ -920,6 +924,7 @@ const TyporaMode = {
     });
 
     mini.addEventListener('blur', () => {
+      this._editing = false;           // ← release guard
       setTimeout(() => this._render(), 50);
     });
 
@@ -940,8 +945,8 @@ const TyporaMode = {
     const ta = this._ta;
     if (!ta) return;
 
-    // Textarea gains focus → show raw (hide overlay)
-    ta.addEventListener('focus', () => this.deactivate());
+    // Textarea gains focus → show raw (hide overlay), but not while block-editing
+    ta.addEventListener('focus', () => { if (!this._editing) this.deactivate(); });
 
     // Textarea loses focus → show overlay
     // Small delay so a click on overlay registers before blur fires
