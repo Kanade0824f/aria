@@ -878,25 +878,28 @@ const TyporaMode = {
   _bindBlockClicks() {
     const overlay = this._overlay;
     if (!overlay) return;
-    const els = overlay.querySelectorAll('[data-line]');
-    els.forEach(el => {
+    overlay.querySelectorAll('[data-line]').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Cancel pending re-render so switching blocks is instant
         if (this._renderTimer) { clearTimeout(this._renderTimer); this._renderTimer = null; }
-        this._openBlockEditor(el);
+        const targetLine = el.dataset.line;
+        if (this._currentWrap && this._currentWrap.parentNode) {
+          // Close current, re-render with fresh line numbers, then open target
+          this._editing = false;
+          this._currentWrap = null;
+          this._render();  // synchronous — updates data-line/data-end for all blocks
+          const fresh = this._overlay.querySelector(`[data-line="${targetLine}"]`);
+          if (fresh) this._openBlockEditor(fresh);
+        } else {
+          this._openBlockEditor(el);
+        }
       });
     });
   },
 
   /* ── Inline-edit a single block; overlay stays active ── */
   _openBlockEditor(blockEl) {
-    // Cancel any pending re-render
     if (this._renderTimer) { clearTimeout(this._renderTimer); this._renderTimer = null; }
-    // Remove previous open editor without re-rendering (we'll open the new one immediately)
-    if (this._currentWrap && this._currentWrap.parentNode) {
-      this._currentWrap.remove();
-    }
     this._editing = true;
     this._currentWrap = null;
 
