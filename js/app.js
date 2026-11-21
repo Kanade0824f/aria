@@ -920,7 +920,7 @@ const TyporaMode = {
     mini.className = 'block-inline-textarea';
     mini.value = rawText;
     // Pre-set height to match the rendered block so there's no visual jump
-    mini.style.height = Math.max(blockHeight, 28) + 'px';
+    mini.style.height = Math.max(blockHeight + 16, 44) + 'px';
     wrap.appendChild(mini);
     blockEl.replaceWith(wrap);
     this._currentWrap = wrap;
