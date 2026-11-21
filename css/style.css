@@ -1017,6 +1017,16 @@ img {
 }
 
 /* Rendered blocks in overlay get a subtle hover to invite click */
+.ty-block {
+  cursor: text;
+  border-radius: 4px;
+  transition: background 250ms ease;
+  padding: 2px 4px;
+  margin: 0 -4px;
+}
+.ty-block:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
 .typora-overlay p,
 .typora-overlay h1, .typora-overlay h2, .typora-overlay h3,
 .typora-overlay h4, .typora-overlay h5, .typora-overlay h6,

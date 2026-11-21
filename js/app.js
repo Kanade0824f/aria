@@ -868,10 +868,7 @@ const TyporaMode = {
 
     return blocks.map(({ startLine, endLine, text }) => {
       const html = Renderer.render(text.trim());
-      // Inject data-line and data-end onto first element tag
-      return html.replace(/^(\s*<[a-zA-Z][^>]*)/, (m, tag) =>
-        tag.includes('data-line') ? m : tag + ` data-line="${startLine}" data-end="${endLine}"`
-      );
+      return `<div class="ty-block" data-line="${startLine}" data-end="${endLine}">${html}</div>`;
     }).join('\n');
   },
 
