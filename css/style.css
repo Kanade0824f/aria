@@ -997,12 +997,11 @@ img {
   line-height: var(--line-height);
   overflow-y: auto;
   overflow-x: hidden;
-  pointer-events: none;   /* invisible while NOT in typora mode */
+  pointer-events: none;
   opacity: 0;
   z-index: 2;
   background: transparent;
-  transition: opacity 150ms ease;
-  /* Scroll sync'd via JS */
+  transition: opacity 200ms ease, background 200ms ease;
 }
 
 /* When Typora mode is active on the pane */
@@ -1017,7 +1016,7 @@ img {
   caret-color: var(--text);  /* keep cursor visible */
 }
 
-/* Rendered blocks in overlay get a hover ring to invite click */
+/* Rendered blocks in overlay get a subtle hover to invite click */
 .typora-overlay p,
 .typora-overlay h1, .typora-overlay h2, .typora-overlay h3,
 .typora-overlay h4, .typora-overlay h5, .typora-overlay h6,
@@ -1025,9 +1024,12 @@ img {
 .typora-overlay blockquote, .typora-overlay pre,
 .typora-overlay table, .typora-overlay .katex-display {
   cursor: text;
-  border-radius: 3px;
-  transition: outline 100ms ease;
-  outline: 2px solid transparent;
+  border-radius: 4px;
+  transition: background 180ms ease;
+  padding-left: 4px;
+  padding-right: 4px;
+  margin-left: -4px;
+  margin-right: -4px;
 }
 .typora-overlay p:hover,
 .typora-overlay h1:hover, .typora-overlay h2:hover, .typora-overlay h3:hover,
@@ -1035,12 +1037,17 @@ img {
 .typora-overlay ul:hover, .typora-overlay ol:hover,
 .typora-overlay blockquote:hover, .typora-overlay pre:hover,
 .typora-overlay table:hover, .typora-overlay .katex-display:hover {
-  outline-color: var(--accent-light);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* Block inline editor (per-block Typora editing) */
 .block-inline-editor {
-  margin: 0;
+  margin: 2px 0;
+  animation: block-editor-in 120ms ease;
+}
+@keyframes block-editor-in {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .block-inline-textarea {
   width: 100%;
@@ -1048,16 +1055,22 @@ img {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--text);
-  background: var(--accent-light);
-  border: 1.5px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   border-radius: 4px;
-  padding: 4px 10px;
+  padding: 6px 10px;
   resize: none;
   overflow: hidden;
   line-height: var(--line-height);
   outline: none;
   display: block;
   box-sizing: border-box;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.block-inline-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 /* Resize handle */

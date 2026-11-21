@@ -876,9 +876,12 @@ const TyporaMode = {
   _bindBlockClicks() {
     const overlay = this._overlay;
     if (!overlay) return;
-    overlay.querySelectorAll('[data-line]').forEach(el => {
+    const els = overlay.querySelectorAll('[data-line]');
+    console.log('[Typora] bindBlockClicks: found', els.length, 'blocks');
+    els.forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        console.log('[Typora] block clicked, startLine=', el.dataset.line, 'endLine=', el.dataset.end);
         this._openBlockEditor(el);
       });
     });
@@ -925,7 +928,10 @@ const TyporaMode = {
 
     mini.addEventListener('blur', () => {
       this._editing = false;           // ← release guard
-      setTimeout(() => this._render(), 50);
+      // Fade the wrap out, then re-render
+      wrap.style.transition = 'opacity 100ms ease';
+      wrap.style.opacity = '0';
+      setTimeout(() => this._render(), 100);
     });
 
     mini.addEventListener('keydown', (e) => {
