@@ -984,10 +984,10 @@ img {
   color: var(--text-tertiary);
 }
 
-/* ── Typora-style Per-Block Live Overlay ────────────────────────────
-   The overlay sits atop the textarea. Each markdown block is an
-   independent rendered <div>. Click a block → inline mini textarea
-   for just that block. Blur → re-render.
+/* ── Typora-style Live Overlay ──────────────────────────────────────
+   The overlay mirrors the textarea geometry and renders HTML on top.
+   In "typora" mode the textarea becomes transparent (caret visible)
+   and the overlay absorbs pointer events for click-to-edit.
    ─────────────────────────────────────────────────────────────────── */
 .typora-overlay {
   position: absolute;
@@ -997,14 +997,15 @@ img {
   line-height: var(--line-height);
   overflow-y: auto;
   overflow-x: hidden;
-  pointer-events: none;
+  pointer-events: none;   /* invisible while NOT in typora mode */
   opacity: 0;
   z-index: 2;
   background: transparent;
   transition: opacity 150ms ease;
+  /* Scroll sync'd via JS */
 }
 
-/* When Typora mode is active */
+/* When Typora mode is active on the pane */
 .editor-pane.typora-active .typora-overlay {
   pointer-events: auto;
   opacity: 1;
@@ -1012,43 +1013,50 @@ img {
 }
 
 .editor-pane.typora-active .editor-textarea {
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
+  color: transparent;
+  caret-color: var(--text);  /* keep cursor visible */
 }
 
-/* ── Individual blocks ── */
-.typora-block {
+/* Rendered blocks in overlay get a hover ring to invite click */
+.typora-overlay p,
+.typora-overlay h1, .typora-overlay h2, .typora-overlay h3,
+.typora-overlay h4, .typora-overlay h5, .typora-overlay h6,
+.typora-overlay ul, .typora-overlay ol,
+.typora-overlay blockquote, .typora-overlay pre,
+.typora-overlay table, .typora-overlay .katex-display {
   cursor: text;
-  border-radius: 4px;
+  border-radius: 3px;
+  transition: outline 100ms ease;
   outline: 2px solid transparent;
-  transition: outline 120ms ease;
-  padding: 2px 4px;
-  margin: 0 -4px;
 }
-.typora-block:hover {
+.typora-overlay p:hover,
+.typora-overlay h1:hover, .typora-overlay h2:hover, .typora-overlay h3:hover,
+.typora-overlay h4:hover, .typora-overlay h5:hover, .typora-overlay h6:hover,
+.typora-overlay ul:hover, .typora-overlay ol:hover,
+.typora-overlay blockquote:hover, .typora-overlay pre:hover,
+.typora-overlay table:hover, .typora-overlay .katex-display:hover {
   outline-color: var(--accent-light);
 }
-.typora-block.typora-editing {
-  outline-color: var(--accent);
-  background: var(--code-bg, rgba(128,128,128,0.06));
-}
 
-/* ── Mini block editor textarea ── */
-.typora-block-editor {
-  display: block;
+/* Block inline editor (per-block Typora editing) */
+.block-inline-editor {
+  margin: 0;
+}
+.block-inline-textarea {
   width: 100%;
-  border: none;
-  background: transparent;
+  min-height: 1.4em;
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
-  line-height: var(--line-height);
   color: var(--text);
-  padding: var(--sp-2) 0;
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 10px;
   resize: none;
-  outline: none;
   overflow: hidden;
-  min-height: 1.6em;
+  line-height: var(--line-height);
+  outline: none;
+  display: block;
   box-sizing: border-box;
 }
 
