@@ -911,17 +911,23 @@ const TyporaMode = {
     const endLine = isNaN(rawEndLine) ? startLine : rawEndLine;
     const rawText = lines.slice(startLine, endLine + 1).join('\n');
 
+    // Measure rendered block height before replacing it
+    const blockHeight = blockEl.getBoundingClientRect().height;
+
     const wrap = document.createElement('div');
     wrap.className = 'block-inline-editor';
     const mini = document.createElement('textarea');
     mini.className = 'block-inline-textarea';
     mini.value = rawText;
+    // Pre-set height to match the rendered block so there's no visual jump
+    mini.style.height = Math.max(blockHeight, 28) + 'px';
     wrap.appendChild(mini);
     blockEl.replaceWith(wrap);
     this._currentWrap = wrap;
 
     requestAnimationFrame(() => {
-      mini.style.height = mini.scrollHeight + 'px';
+      // Expand if content is taller than the rendered block
+      if (mini.scrollHeight > mini.clientHeight) mini.style.height = mini.scrollHeight + 'px';
       mini.focus();
       mini.selectionStart = mini.selectionEnd = mini.value.length;
     });
