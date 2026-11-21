@@ -1052,7 +1052,7 @@ img {
 
 /* Block inline editor (per-block Typora editing) */
 .block-inline-editor {
-  margin: 2px 0;
+  margin: 2px 0 2px 8px;
   animation: block-editor-in 220ms cubic-bezier(0.2, 0, 0, 1);
 }
 @keyframes block-editor-in {
