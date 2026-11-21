@@ -929,9 +929,9 @@ const TyporaMode = {
     mini.addEventListener('blur', () => {
       this._editing = false;           // ← release guard
       // Fade the wrap out, then re-render
-      wrap.style.transition = 'opacity 100ms ease';
+      wrap.style.transition = 'opacity 180ms ease';
       wrap.style.opacity = '0';
-      setTimeout(() => this._render(), 100);
+      setTimeout(() => this._render(), 180);
     });
 
     mini.addEventListener('keydown', (e) => {
