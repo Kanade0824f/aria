@@ -930,10 +930,8 @@ const TyporaMode = {
     });
 
     mini.addEventListener('blur', () => {
-      if (this._editing) return;  // Another block opened — skip re-render
-      wrap.style.transition = 'opacity 180ms ease';
-      wrap.style.opacity = '0';
-      this._renderTimer = setTimeout(() => { this._renderTimer = null; this._render(); }, 180);
+      if (this._editing) return;
+      this._renderTimer = setTimeout(() => { this._renderTimer = null; this._render(); }, 20);
     });
 
     mini.addEventListener('keydown', (e) => {
