@@ -779,7 +779,8 @@ const Editor = {
 const TyporaMode = {
   _active: false,
   _editing: false,
-  _renderTimer: null,   // pending re-render after block close
+  _renderTimer: null,
+  _currentWrap: null,   // currently open block-inline-editor element
 
   get _pane()    { return document.getElementById('editor-pane'); },
   get _overlay() { return document.getElementById('typora-overlay'); },
@@ -890,9 +891,14 @@ const TyporaMode = {
 
   /* ── Inline-edit a single block; overlay stays active ── */
   _openBlockEditor(blockEl) {
-    // Cancel any pending re-render from a previous block closing
+    // Cancel any pending re-render
     if (this._renderTimer) { clearTimeout(this._renderTimer); this._renderTimer = null; }
+    // Remove previous open editor without re-rendering (we'll open the new one immediately)
+    if (this._currentWrap && this._currentWrap.parentNode) {
+      this._currentWrap.remove();
+    }
     this._editing = true;
+    this._currentWrap = null;
 
     const startLine = parseInt(blockEl.dataset.line, 10);
     const ta = this._ta;
@@ -909,6 +915,7 @@ const TyporaMode = {
     mini.value = rawText;
     wrap.appendChild(mini);
     blockEl.replaceWith(wrap);
+    this._currentWrap = wrap;
 
     requestAnimationFrame(() => {
       mini.style.height = mini.scrollHeight + 'px';
@@ -931,6 +938,7 @@ const TyporaMode = {
 
     mini.addEventListener('blur', () => {
       if (this._editing) return;
+      this._currentWrap = null;
       this._renderTimer = setTimeout(() => { this._renderTimer = null; this._render(); }, 20);
     });
 
