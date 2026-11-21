@@ -780,7 +780,8 @@ const TyporaMode = {
   _active: false,
   _editing: false,
   _renderTimer: null,
-  _currentWrap: null,   // currently open block-inline-editor element
+  _currentWrap: null,
+  _overlayClickHandler: null,
 
   get _pane()    { return document.getElementById('editor-pane'); },
   get _overlay() { return document.getElementById('typora-overlay'); },
@@ -874,27 +875,29 @@ const TyporaMode = {
     }).join('\n');
   },
 
-  /* ── Bind click-to-edit on each rendered block ── */
+  /* ── Bind click-to-edit — event delegation on overlay ── */
   _bindBlockClicks() {
     const overlay = this._overlay;
     if (!overlay) return;
-    overlay.querySelectorAll('[data-line]').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (this._renderTimer) { clearTimeout(this._renderTimer); this._renderTimer = null; }
-        const targetLine = el.dataset.line;
-        if (this._currentWrap && this._currentWrap.parentNode) {
-          // Close current, re-render with fresh line numbers, then open target
-          this._editing = false;
-          this._currentWrap = null;
-          this._render();  // synchronous — updates data-line/data-end for all blocks
-          const fresh = this._overlay.querySelector(`[data-line="${targetLine}"]`);
-          if (fresh) this._openBlockEditor(fresh);
-        } else {
-          this._openBlockEditor(el);
-        }
-      });
-    });
+    // Remove old listener if any (re-render rebinds)
+    if (this._overlayClickHandler) overlay.removeEventListener('click', this._overlayClickHandler);
+    this._overlayClickHandler = (e) => {
+      const block = e.target.closest('[data-line]');
+      if (!block) return;
+      e.stopPropagation();
+      if (this._renderTimer) { clearTimeout(this._renderTimer); this._renderTimer = null; }
+      const targetLine = block.dataset.line;
+      if (this._currentWrap && this._currentWrap.parentNode) {
+        this._editing = false;
+        this._currentWrap = null;
+        this._render();
+        const fresh = this._overlay.querySelector(`[data-line="${targetLine}"]`);
+        if (fresh) this._openBlockEditor(fresh);
+      } else {
+        this._openBlockEditor(block);
+      }
+    };
+    overlay.addEventListener('click', this._overlayClickHandler);
   },
 
   /* ── Inline-edit a single block; overlay stays active ── */
